@@ -1,0 +1,53 @@
+[Unit]
+Description=omend hardware daemon
+After=dbus.service
+Requires=dbus.service
+
+[Service]
+Type=dbus
+BusName=dev.omend
+ExecStart=/usr/bin/omend --system --config /etc/omend/config.toml
+# Runs after every exit, including SIGKILL, abort and a stop timeout, where the
+# daemon cannot clean up. It requests the configured recovery mode only when no
+# daemon holds /run/omend.lock; "-" keeps a failed request from masking the
+# daemon's own exit status. Recovery is a request, not verified cooling.
+ExecStopPost=-/usr/bin/omend --recover-fans --config /etc/omend/config.toml
+Restart=on-failure
+RestartSec=2
+# Bound the time a hung daemon can hold manual fan control before SIGKILL and
+# the ExecStopPost recovery above.
+TimeoutStopSec=15s
+UMask=0077
+
+# Keep sysfs writable: ProtectKernelTunables would block hardware controls.
+# The daemon needs only root's ownership of sysfs attributes, /etc/omend and
+# /run/omend.lock. It opens no device nodes and no network sockets.
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=-/etc/omend
+ProtectHome=true
+PrivateTmp=true
+# No /dev access is needed: fan, profile and LED controls are sysfs attributes.
+PrivateDevices=true
+PrivateNetwork=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# CHOWN/FOWNER let an atomic config save keep an administrator-chosen owner and
+# mode; DAC_OVERRIDE covers root-managed files that lack owner write bits.
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_FOWNER
+
+[Install]
+WantedBy=multi-user.target

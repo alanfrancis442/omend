@@ -1,0 +1,35 @@
+version = 1
+
+[[annotations]]
+path = [
+    ".github/**",
+    "AGENTS.md",
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "rust-toolchain.toml",
+    "REUSE.toml",
+    "licensing/third-party/README.md",
+    "licensing/third-party/manifest.json",
+    ".gitignore",
+    ".ignore",
+    "Cargo.lock",
+    "Cargo.toml",
+    "config/**",
+    "crates/**/Cargo.toml",
+    "docs/**",
+    "LICENSE",
+    "package.json",
+    "package-lock.json",
+    "packaging/**",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 alanfrancis442"
+SPDX-License-Identifier = "MIT OR Apache-2.0"
+
+[[annotations]]
+path = ["kernel/omen-kbd/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 alanfrancis442"
+SPDX-License-Identifier = "GPL-2.0-only"

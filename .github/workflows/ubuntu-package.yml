@@ -1,0 +1,25 @@
+name: Experimental Ubuntu package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deb:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Native package build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential dpkg-dev pkg-config cmake clang python3 libfontconfig1-dev libfreetype6-dev libxcb1-dev libx11-dev libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libegl1-mesa-dev libudev-dev dbus desktop-file-utils
+      - name: Check transaction guards with mocks
+        run: python3 packaging/test-deb-guards.py
+      - name: Build and extract experimental package (never install)
+        env:
+          # Explicit local-only identity; replace with a real maintainer before publication.
+          OMEND_DEB_MAINTAINER: Local experimental builder <root@localhost>
+        run: sh packaging/build-ubuntu-deb.sh
+      # No dpkg --install, apt install of the package, service changes or publishing.

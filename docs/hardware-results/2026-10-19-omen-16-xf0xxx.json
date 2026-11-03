@@ -1,0 +1,141 @@
+{
+  "backup": "/var/backups/omend/20261019T102050Z-117496",
+  "result": "FAILED: Temperature outside low-workload test bounds: {'time': '2026-10-19T10:21:44.560539+00:00', 'phase': 'candidate-stopped-firmware-auto', 'cpu_mc': 83000, 'gpu_mc': 52000, 'mode': 2, 'pwm': 0, 'fan1_rpm': 0, 'fan2_rpm': 0}\n",
+  "phases": {
+    "baseline-wait": {
+      "samples": 28,
+      "start": "2026-10-19T10:19:50.887394+00:00",
+      "end": "2026-10-19T10:20:48.803658+00:00",
+      "cpu_c_min": 46.375,
+      "cpu_c_max": 70.0,
+      "gpu_c_min": 42.0,
+      "gpu_c_max": 48.0,
+      "modes": [
+        1,
+        2
+      ],
+      "fan1_rpm_min": 0,
+      "fan1_rpm_max": 3900,
+      "fan2_rpm_min": 0,
+      "fan2_rpm_max": 4200
+    },
+    "legacy-stopped-firmware-auto": {
+      "samples": 5,
+      "start": "2026-10-19T10:20:51.067636+00:00",
+      "end": "2026-10-19T10:20:55.380668+00:00",
+      "cpu_c_min": 53.125,
+      "cpu_c_max": 68.125,
+      "gpu_c_min": 43.0,
+      "gpu_c_max": 50.0,
+      "modes": [
+        2
+      ],
+      "fan1_rpm_min": 0,
+      "fan1_rpm_max": 0,
+      "fan2_rpm_min": 0,
+      "fan2_rpm_max": 0
+    },
+    "candidate-started": {
+      "samples": 1,
+      "start": "2026-10-19T10:20:58.672471+00:00",
+      "end": "2026-10-19T10:20:58.672471+00:00",
+      "cpu_c_min": 55.125,
+      "cpu_c_max": 55.125,
+      "gpu_c_min": 44.0,
+      "gpu_c_max": 44.0,
+      "modes": [
+        1
+      ],
+      "fan1_rpm_min": 100,
+      "fan1_rpm_max": 100,
+      "fan2_rpm_min": 200,
+      "fan2_rpm_max": 200
+    },
+    "candidate-auto": {
+      "samples": 10,
+      "start": "2026-10-19T10:20:59.688965+00:00",
+      "end": "2026-10-19T10:21:09.432863+00:00",
+      "cpu_c_min": 49.75,
+      "cpu_c_max": 58.5,
+      "gpu_c_min": 44.0,
+      "gpu_c_max": 46.0,
+      "modes": [
+        2
+      ],
+      "fan1_rpm_min": 0,
+      "fan1_rpm_max": 100,
+      "fan2_rpm_min": 0,
+      "fan2_rpm_max": 200
+    },
+    "candidate-balanced": {
+      "samples": 15,
+      "start": "2026-10-19T10:21:13.063708+00:00",
+      "end": "2026-10-19T10:21:28.300947+00:00",
+      "cpu_c_min": 50.625,
+      "cpu_c_max": 65.5,
+      "gpu_c_min": 44.0,
+      "gpu_c_max": 51.0,
+      "modes": [
+        1
+      ],
+      "fan1_rpm_min": 300,
+      "fan1_rpm_max": 3300,
+      "fan2_rpm_min": 200,
+      "fan2_rpm_max": 3600
+    },
+    "candidate-stopped-firmware-auto": {
+      "samples": 15,
+      "start": "2026-10-19T10:21:29.441191+00:00",
+      "end": "2026-10-19T10:21:44.560539+00:00",
+      "cpu_c_min": 46.5,
+      "cpu_c_max": 83.0,
+      "gpu_c_min": 42.0,
+      "gpu_c_max": 52.0,
+      "modes": [
+        2
+      ],
+      "fan1_rpm_min": 0,
+      "fan1_rpm_max": 3300,
+      "fan2_rpm_min": 0,
+      "fan2_rpm_max": 3600
+    }
+  },
+  "checks": {
+    "/usr/bin/omend": {
+      "matches_backup": true,
+      "sha256": "92ddf0e9eca18fe9b2527bd99039a4ecab6c907a84d241fb9c968a00802b53e1"
+    },
+    "/etc/dbus-1/system.d/dev.omend.conf": {
+      "matches_backup": true,
+      "sha256": "89ac05ae767ab31e60ce37b1593a1257ec52cd795e37a1bb98e3d44fb330460f"
+    },
+    "/etc/omend/config.toml": {
+      "matches_backup": true,
+      "sha256": "995280a47a324eb1e0510505af61f0b92e3f34987fe9bb14bb1221bf0527cc7b"
+    },
+    "/etc/systemd/system/omend.service": {
+      "matches_backup": true,
+      "sha256": "88806ec3812ad0883ac4f95f48dbd090609c611f0b893f689211651d8284322e"
+    },
+    "running_daemon_sha256": "92ddf0e9eca18fe9b2527bd99039a4ecab6c907a84d241fb9c968a00802b53e1"
+  },
+  "last_trace_sample": {
+    "time": "2026-10-19T10:21:44.560539+00:00",
+    "phase": "candidate-stopped-firmware-auto",
+    "cpu_mc": 83000,
+    "gpu_mc": 52000,
+    "mode": 2,
+    "pwm": 0,
+    "fan1_rpm": 0,
+    "fan2_rpm": 0
+  },
+  "candidate_daemon_sha256": "6147b1cf6112074a92cff0f0315c5ee55e4262876a66bf0a20f076809b462574",
+  "candidate_archive_sha256": "f5142affddc6ae7912f22bec54975891c938d3732966d5090d037bae8363aa0f",
+  "authorization_observed": {
+    "untrusted_status_read": "passed",
+    "untrusted_auto_mutation": "AccessDenied",
+    "fresh_omen_group_member_auto_mutation": "passed",
+    "root_balanced_mutation": "passed"
+  },
+  "scope": "One OMEN 16-xf0xxx, BIOS F.25, kernel 7.1.8-arch1-3; low-workload observation, no stress or crash injection."
+}

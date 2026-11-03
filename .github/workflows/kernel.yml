@@ -1,0 +1,28 @@
+name: Optional keyboard module compile
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install distribution kernel headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential linux-headers-generic
+      - name: Compile against installed distribution headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The hosted runner kernel can differ from the installed header package.
+          kernel_build_dir=$(find /usr/src -maxdepth 1 -type d -name 'linux-headers-*-generic' | sort -V | sed -n '$p')
+          test -n "$kernel_build_dir"
+          make -s -C "$kernel_build_dir" kernelrelease
+          make -C kernel/omen-kbd KDIR="$kernel_build_dir" W=1
+          test -s kernel/omen-kbd/omen-kbd.ko
+      # Compile only: never install/load a module or claim hardware validation.

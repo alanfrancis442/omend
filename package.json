@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@nanonets/graft": "0.21.1"
+  },
+  "allowScripts": {
+    "@nanonets/graft": true,
+    "tree-sitter": true,
+    "tree-sitter-go": true,
+    "tree-sitter-java": true,
+    "tree-sitter-kotlin": true,
+    "tree-sitter-php": true,
+    "tree-sitter-python": true,
+    "@davisvaughan/tree-sitter-r": true,
+    "tree-sitter-swift": true,
+    "tree-sitter-typescript": true,
+    "tree-sitter-cli": true,
+    "tree-sitter-javascript": true
+  }
+}

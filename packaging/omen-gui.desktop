@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=omend
+Comment=Fan curves, keyboard lighting, and power profiles for HP OMEN and Victus
+Exec=/usr/bin/omen-gui
+Icon=omen-gui
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=omen;fan;rgb;thermal;
+StartupNotify=true

@@ -1,0 +1,2167 @@
+// SPDX-FileCopyrightText: 2026 alanfrancis442
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
+import { LineEdit, Slider, ScrollView, ComboBox, CheckBox, Palette, AboutSlint } from "std-widgets.slint";
+
+export global Theme {
+    in-out property <color> accent: #ff375f;
+    in-out property <float> text-scale: 1;
+    in-out property <bool> compact: false;
+    in-out property <bool> frosted: false;
+    out property <length> gap: self.compact ? 12px : 16px;
+    out property <length> padding: self.compact ? 12px : 16px;
+}
+
+component SettingsSection inherits Rectangle {
+    in property <string> heading;
+    background: Theme.frosted ? #ffffff20 : #ffffff12;
+    border-radius: 16px;
+    border-width: 1px;
+    border-color: #ffffff1a;
+    VerticalLayout {
+        padding: 20px;
+        spacing: Theme.gap;
+        Text { text: root.heading; color: #f4f4f6; font-size: 17px * Theme.text-scale; font-weight: 700; }
+        @children
+    }
+}
+
+component SettingField inherits VerticalLayout {
+    in property <string> label;
+    in property <string> description;
+    spacing: 6px;
+    Text { text: root.label; color: #ededf0; font-size: 13px * Theme.text-scale; font-weight: 600; wrap: word-wrap; }
+    if root.description != "": Text { text: root.description; color: #aeaeb8; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+    @children
+}
+
+export struct FanPoint {
+    temp: float,
+    pct: float,
+}
+
+export struct CurveChoice {
+    id: string,
+    label: string,
+}
+
+export struct StepSwatch {
+    r: float,
+    g: float,
+    b: float,
+}
+
+component NavItem inherits Rectangle {
+    in property <string> label;
+    in property <bool> active: false;
+    in property <bool> tight: false;
+    callback clicked();
+    height: 36px;
+    border-radius: 10px;
+    background: root.active ? Theme.accent.with-alpha(0.22) : (nav-hit.has-hover ? #ffffff14 : transparent);
+    Text {
+        x: root.tight ? 6px : 12px;
+        width: parent.width - 2 * self.x;
+        overflow: elide;
+        text: root.label;
+        color: root.active || nav-hit.has-hover ? #ffffff : #aeaeb2;
+        font-size: 14px * Theme.text-scale;
+        font-weight: root.active ? 600 : 400;
+        vertical-alignment: center;
+        height: 100%;
+    }
+    nav-hit := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component ModeCard inherits Rectangle {
+    in property <string> title;
+    in property <string> hint;
+    in property <bool> selected: false;
+    callback clicked();
+    height: 64px;
+    horizontal-stretch: 1;
+    preferred-width: 0px;
+    min-width: 0px;
+    clip: true;
+    border-radius: 14px;
+    background: root.selected ? (mode-hit.has-hover ? Theme.accent.brighter(0.15) : Theme.accent) : (mode-hit.has-hover ? #ffffff22 : #ffffff14);
+    border-width: 1px;
+    border-color: root.selected ? Theme.accent : (mode-hit.has-hover ? #ffffff33 : #ffffff1c);
+    VerticalLayout {
+        alignment: center;
+        spacing: 4px;
+        Text {
+            text: root.title;
+            color: #ffffff;
+            font-size: 14px * Theme.text-scale;
+            font-weight: 700;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: root.hint;
+            color: root.selected ? #ffe4ea : #8e8e93;
+            font-size: 11px * Theme.text-scale;
+            horizontal-alignment: center;
+        }
+    }
+    mode-hit := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component Pill inherits Rectangle {
+    in property <string> label;
+    in property <bool> selected: false;
+    callback clicked();
+    horizontal-stretch: 0;
+    height: 32px;
+    border-radius: 8px;
+    background: root.selected ? Theme.accent : #14141a;
+    border-width: 1px;
+    border-color: root.selected ? Theme.accent.brighter(0.25) : #ffffff1c;
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        alignment: center;
+        Text {
+            text: root.label;
+            color: #f6f6f8;
+            font-size: 12px * Theme.text-scale;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component StudioSlider inherits Rectangle {
+    in property <string> label;
+    in property <float> minimum: 0;
+    in property <float> maximum: 100;
+    in-out property <float> value;
+    callback released();
+    horizontal-stretch: 0;
+    height: 26px;
+    HorizontalLayout {
+        spacing: 8px;
+        alignment: center;
+        Text {
+            text: root.label;
+            color: #a8a8b4;
+            font-size: 11px * Theme.text-scale;
+            font-weight: 600;
+            min-width: 76px;
+            vertical-alignment: center;
+        }
+        Slider {
+            width: 132px;
+            horizontal-stretch: 0;
+            minimum: root.minimum;
+            maximum: root.maximum;
+            value <=> root.value;
+            released(_) => { root.released(); }
+        }
+        Text {
+            text: round(root.value);
+            color: #f4f4f8;
+            font-size: 11px * Theme.text-scale;
+            font-weight: 600;
+            min-width: 26px;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+    }
+}
+
+component Swatch inherits Rectangle {
+    in property <color> fill;
+    callback picked();
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    background: root.fill;
+    border-width: 2px;
+    border-color: swatch-hit.has-hover ? #ffffff : #ffffff33;
+    swatch-hit := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.picked(); }
+    }
+}
+
+component GhostButton inherits Rectangle {
+    in property <string> label;
+    in property <bool> primary: false;
+    callback clicked();
+    height: 34px;
+    min-width: 108px;
+    border-radius: 10px;
+    border-width: 1px;
+    background: root.primary ? (btn-hit.has-hover ? Theme.accent.brighter(0.15) : Theme.accent) : (btn-hit.has-hover ? #ffffff28 : #ffffff18);
+    border-color: root.primary ? Theme.accent : (btn-hit.has-hover ? #ffffff40 : #ffffff22);
+    Text {
+        text: root.label;
+        color: #f7f7f8;
+        font-size: 13px * Theme.text-scale;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    btn-hit := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component Chip inherits Rectangle {
+    in property <string> label;
+    in property <bool> selected: false;
+    callback clicked();
+    height: 28px;
+    border-radius: 8px;
+    background: root.selected ? Theme.accent : (chip-hit.has-hover ? #ffffff24 : #ffffff14);
+    border-width: 1px;
+    border-color: root.selected ? Theme.accent : #ffffff1c;
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        alignment: center;
+        Text {
+            text: root.label;
+            color: #f7f7f8;
+            font-size: 12px * Theme.text-scale;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+    chip-hit := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component Stepper inherits Rectangle {
+    in property <string> caption;
+    in property <string> value;
+    callback down();
+    callback up();
+    height: 52px;
+    Text {
+        text: root.caption;
+        color: #8d8d98;
+        font-size: 11px * Theme.text-scale;
+        y: 0;
+    }
+    Rectangle {
+        y: 18px;
+        height: 32px;
+        width: 100%;
+        border-radius: 10px;
+        background: Theme.frosted ? #ffffff20 : #ffffff12;
+        border-width: 1px;
+        border-color: #ffffff1c;
+        HorizontalLayout {
+            padding-left: 4px;
+            padding-right: 4px;
+            spacing: 4px;
+            Rectangle {
+                width: 28px;
+                border-radius: 6px;
+                background: down-hit.has-hover ? #ffffff18 : transparent;
+                Text {
+                    text: "−";
+                    color: down-hit.has-hover ? #ffffff : #d1d1d6;
+                    font-size: 18px * Theme.text-scale;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                down-hit := TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => { root.down(); }
+                }
+            }
+            Text {
+                text: root.value;
+                color: #f4f4f6;
+                font-size: 14px * Theme.text-scale;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            Rectangle {
+                width: 28px;
+                border-radius: 6px;
+                background: up-hit.has-hover ? #ffffff18 : transparent;
+                Text {
+                    text: "+";
+                    color: up-hit.has-hover ? #ffffff : #d1d1d6;
+                    font-size: 18px * Theme.text-scale;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                up-hit := TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => { root.up(); }
+                }
+            }
+        }
+    }
+}
+
+component Gauge inherits Rectangle {
+    in property <string> title;
+    in property <float> value: 0;
+    in property <string> value-text: "0%";
+    in property <string> detail: "";
+    in property <string> caption: "";
+    in property <color> accent: #b06bff;
+    in property <length> ring-size: 148px;
+    horizontal-stretch: 1;
+    vertical-stretch: 1;
+    preferred-width: 0px;
+    min-width: 0px;
+    min-height: 0px;
+    clip: true;
+    background: Theme.frosted ? #ffffff20 : #ffffff12;
+    border-radius: 16px;
+    border-width: 1px;
+    border-color: #ffffff1a;
+    VerticalLayout {
+        width: parent.width;
+        height: parent.height;
+        padding: Theme.padding;
+        spacing: 8px;
+        alignment: center;
+        cross-axis-alignment: center;
+        Text {
+            text: root.title;
+            height: 22px;
+            width: 100%;
+            color: #f4f4f6;
+            font-size: 13px * Theme.text-scale;
+            font-weight: 700;
+            letter-spacing: 1px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        Rectangle {
+            horizontal-stretch: 1;
+            vertical-stretch: 0;
+            min-width: 0px;
+            min-height: root.ring-size;
+            max-height: root.ring-size;
+            preferred-height: root.ring-size;
+            Rectangle {
+                width: root.ring-size;
+                height: root.ring-size;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                Rectangle {
+                    width: 100%;
+                    height: 100%;
+                    for tick in 32: Rectangle {
+                        width: 100%;
+                        height: 100%;
+                        transform-rotation: -11.25deg * tick;
+                        Rectangle {
+                            width: max(parent.height * 0.034, 3px);
+                            height: parent.height * 0.1;
+                            x: (parent.width - self.width) / 2;
+                            y: parent.height * 0.015;
+                            border-radius: 2px;
+                            background: (tick + 1) * 100.0 / 32.0 <= root.value ? root.accent : #ffffff1c;
+                        }
+                    }
+                    Text {
+                        text: root.value-text;
+                        width: 100%;
+                        height: 100%;
+                        color: #f7f7f8;
+                        font-size: 28px * Theme.text-scale;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+        Text {
+            text: root.detail;
+            width: 100%;
+            overflow: elide;
+            color: #30d158;
+            font-size: 18px * Theme.text-scale;
+            font-weight: 700;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: root.caption;
+            width: 100%;
+            overflow: elide;
+            color: #8a8a96;
+            font-size: 12px * Theme.text-scale;
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component Readout inherits Rectangle {
+    in property <string> caption;
+    in property <string> value;
+    in property <string> unit;
+    horizontal-stretch: 1;
+    preferred-width: 0px;
+    min-width: 0px;
+    height: 84px;
+    background: Theme.frosted ? #ffffff20 : #ffffff12;
+    border-radius: 16px;
+    border-width: 1px;
+    border-color: #ffffff1a;
+    VerticalLayout {
+        padding-left: 16px;
+        padding-right: 16px;
+        alignment: center;
+        spacing: 2px;
+        Text {
+            text: root.caption;
+            color: #8a8a96;
+            font-size: 12px * Theme.text-scale;
+        }
+        HorizontalLayout {
+            spacing: 8px;
+            alignment: center;
+            Text {
+                text: root.value;
+                width: 120px;
+                overflow: elide;
+                color: #f5f5f7;
+                font-size: 32px * Theme.text-scale;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: root.unit;
+                color: #8a8a96;
+                font-size: 13px * Theme.text-scale;
+                vertical-alignment: center;
+            }
+        }
+    }
+}
+
+component DeckKey inherits Rectangle {
+    in property <color> fill: #222;
+    in property <bool> active: false;
+    in property <bool> wide: false;
+    width: 28px;
+    height: 22px;
+    Rectangle {
+        x: -5px;
+        y: -5px;
+        width: parent.width + 10px;
+        height: parent.height + 10px;
+        border-radius: 9px;
+        background: root.fill;
+        opacity: 0.34;
+    }
+    border-radius: 5px;
+    background: root.fill;
+    border-width: 1px;
+    border-color: root.active ? #ffffff : #ffffff38;
+}
+
+component CurvePlot inherits Rectangle {
+    in property <[FanPoint]> points;
+    in property <int> point-count: 5;
+    in property <int> selected: 0;
+    in property <float> axis-min: 20;
+    in property <float> axis-max: 120;
+    in property <float> live-temp: 0;
+    callback press(float, float, float, float);
+    callback drag(float, float, float, float);
+    callback release();
+
+    function span() -> float {
+        return max(root.axis-max - root.axis-min, 1);
+    }
+    function px(index: int) -> float {
+        let n = min(max(index, 0), max(root.point-count - 1, 0));
+        let temp = root.points[n].temp;
+        return (temp - root.axis-min) / root.span() * (root.width / 1px);
+    }
+    function py(index: int) -> float {
+        let n = min(max(index, 0), max(root.point-count - 1, 0));
+        let pct = clamp(root.points[n].pct, 0, 100);
+        return (1 - pct / 100) * (root.height / 1px);
+    }
+    function live-x() -> length {
+        return (root.live-temp - root.axis-min) / root.span() * root.width;
+    }
+
+    clip: true;
+    background: #0c0e1488;
+    border-radius: 20px;
+    border-width: 1px;
+    border-color: #ffffff1a;
+
+    for tick in 9: Rectangle {
+        x: (tick + 1) * (parent.width / 10);
+        width: 1px;
+        height: 100%;
+        background: #ffffff0e;
+    }
+    for tick in 9: Rectangle {
+        y: (tick + 1) * (parent.height / 10);
+        height: 1px;
+        width: 100%;
+        background: #ffffff0e;
+    }
+
+    Path {
+        fill: #c6f13518;
+        stroke: #c6f135;
+        stroke-width: 2px;
+        width: 100%;
+        height: 100%;
+        viewbox-width: root.width / 1px;
+        viewbox-height: root.height / 1px;
+        MoveTo { x: root.px(0); y: root.height / 1px; }
+        LineTo { x: root.px(0); y: root.py(0); }
+        LineTo { x: root.px(1); y: root.py(1); }
+        LineTo { x: root.px(2); y: root.py(2); }
+        LineTo { x: root.px(3); y: root.py(3); }
+        LineTo { x: root.px(4); y: root.py(4); }
+        LineTo { x: root.px(5); y: root.py(5); }
+        LineTo { x: root.px(6); y: root.py(6); }
+        LineTo { x: root.px(7); y: root.py(7); }
+        LineTo { x: root.px(7); y: root.height / 1px; }
+        Close {}
+    }
+
+    Rectangle {
+        x: clamp(root.live-x(), 0px, root.width);
+        width: 1px;
+        height: 100%;
+        background: #ff2a3a99;
+    }
+
+    for point[index] in root.points: Rectangle {
+        x: root.px(index) * 1px - 7px;
+        y: root.py(index) * 1px - 7px;
+        width: 14px;
+        height: 14px;
+        border-radius: 7px;
+        background: root.selected == index ? #f4ffb0 : #c6f135;
+        border-width: 2px;
+        border-color: #10140c;
+        visible: index < root.point-count;
+    }
+
+    TouchArea {
+        mouse-cursor: pointer;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
+                root.press(self.mouse-x / 1px, self.mouse-y / 1px, self.width / 1px, self.height / 1px);
+            }
+            if (event.kind == PointerEventKind.up) {
+                root.release();
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.drag(self.mouse-x / 1px, self.mouse-y / 1px, self.width / 1px, self.height / 1px);
+            }
+        }
+    }
+}
+
+component MiniCurve inherits Rectangle {
+    in property <[FanPoint]> points;
+    in property <int> point-count: 0;
+    in property <float> live-temp: 0;
+    horizontal-stretch: 1;
+    vertical-stretch: 1;
+    min-height: 48px;
+    clip: true;
+
+    function span() -> float {
+        return 100;
+    }
+    function px(index: int) -> float {
+        let n = min(max(index, 0), max(root.point-count - 1, 0));
+        let temp = root.points[n].temp;
+        return (temp - 20) / root.span() * (root.width / 1px);
+    }
+    function py(index: int) -> float {
+        let n = min(max(index, 0), max(root.point-count - 1, 0));
+        let pct = clamp(root.points[n].pct, 0, 100);
+        return (1 - pct / 100) * (root.height / 1px);
+    }
+
+    background: #0c0e1488;
+    border-radius: 12px;
+
+    if root.point-count >= 2: Rectangle {
+        width: 100%;
+        height: 100%;
+        for tick in 3: Rectangle {
+            y: (tick + 1) * (parent.height / 4);
+            height: 1px;
+            width: 100%;
+            background: #ffffff10;
+        }
+        Path {
+            fill: #c6f13514;
+            stroke-width: 0px;
+            width: 100%;
+            height: 100%;
+            viewbox-width: root.width / 1px;
+            viewbox-height: root.height / 1px;
+            MoveTo { x: root.px(0); y: root.height / 1px; }
+            LineTo { x: root.px(0); y: root.py(0); }
+            LineTo { x: root.px(1); y: root.py(1); }
+            LineTo { x: root.px(2); y: root.py(2); }
+            LineTo { x: root.px(3); y: root.py(3); }
+            LineTo { x: root.px(4); y: root.py(4); }
+            LineTo { x: root.px(5); y: root.py(5); }
+            LineTo { x: root.px(6); y: root.py(6); }
+            LineTo { x: root.px(7); y: root.py(7); }
+            LineTo { x: root.px(7); y: root.height / 1px; }
+            Close {}
+        }
+        Path {
+            stroke: #c6f135;
+            stroke-width: 2px;
+            width: 100%;
+            height: 100%;
+            viewbox-width: root.width / 1px;
+            viewbox-height: root.height / 1px;
+            MoveTo { x: root.px(0); y: root.py(0); }
+            LineTo { x: root.px(1); y: root.py(1); }
+            LineTo { x: root.px(2); y: root.py(2); }
+            LineTo { x: root.px(3); y: root.py(3); }
+            LineTo { x: root.px(4); y: root.py(4); }
+            LineTo { x: root.px(5); y: root.py(5); }
+            LineTo { x: root.px(6); y: root.py(6); }
+            LineTo { x: root.px(7); y: root.py(7); }
+        }
+        Rectangle {
+            x: clamp((root.live-temp - 20) / 100 * root.width, 0px, root.width);
+            width: 1px;
+            height: 100%;
+            background: Theme.accent.with-alpha(0.6);
+        }
+    }
+
+    if root.point-count < 2: Text {
+        text: "Firmware";
+        color: #aeaeb2;
+        font-size: 14px * Theme.text-scale;
+        font-weight: 600;
+        width: 100%;
+        height: 100%;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+component MetricLine inherits VerticalLayout {
+    in property <string> label;
+    in property <string> value;
+    in property <float> amount: 0;
+    in property <color> accent: #5ac8fa;
+    in property <bool> meter: true;
+    preferred-width: 0px;
+    min-width: 0px;
+    height: 32px;
+    spacing: 6px;
+    HorizontalLayout {
+        height: 20px;
+        alignment: space-between;
+        Text {
+            text: root.label;
+            color: #8e8e93;
+            font-size: 13px * Theme.text-scale;
+            vertical-alignment: center;
+        }
+        Text {
+            text: root.value;
+            color: #f5f5f7;
+            font-size: 14px * Theme.text-scale;
+            font-weight: 600;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+    }
+    Rectangle {
+        height: 4px;
+        border-radius: 2px;
+        background: root.meter ? #ffffff16 : transparent;
+        Rectangle {
+            width: clamp(root.amount, 0, 100) / 100 * parent.width;
+            height: 100%;
+            border-radius: 2px;
+            background: root.meter ? root.accent : transparent;
+        }
+    }
+}
+
+// Position cards without imposing a four-column minimum on their container.
+component CardCell inherits Rectangle {
+    in property <int> index;
+    in property <int> columns;
+    in property <length> cell-height;
+    in property <length> available-width;
+    width: (root.available-width - (root.columns - 1) * Theme.gap) / root.columns;
+    height: root.cell-height;
+    x: mod(root.index, root.columns) * (self.width + Theme.gap);
+    y: floor(root.index / root.columns) * (self.height + Theme.gap);
+}
+
+component SpectrumBar inherits Rectangle {
+    in property <float> level;
+    in property <float> peak;
+    in property <color> tint;
+    background: root.tint.with-alpha(0.08);
+    border-radius: 3px;
+    Rectangle {
+        height: max(2px, clamp(root.level, 0, 255) / 255 * parent.height);
+        width: 100%;
+        y: parent.height - self.height;
+        background: root.tint;
+        border-radius: 3px;
+    }
+    Rectangle {
+        y: clamp((1 - root.peak / 255) * parent.height, 0px, parent.height - 2px);
+        width: 100%;
+        height: 2px;
+        background: root.tint.brighter(0.3);
+    }
+}
+
+component AudioSpectrum inherits Rectangle {
+    in property <[float]> levels;
+    in property <[float]> peaks;
+    in property <bool> beat;
+    in property <bool> reverse;
+    background: #0c1016;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: root.beat ? Theme.accent : #ffffff20;
+    Rectangle {
+        x: 12px; y: 10px;
+        width: parent.width - 24px;
+        height: parent.height - 38px;
+        for level[index] in root.levels: SpectrumBar {
+            x: index * parent.width / 16;
+            width: parent.width / 16 - 4px;
+            height: 100%;
+            level: level;
+            peak: root.peaks[index];
+            tint: index < 4 ? #fb7185 : (index < 8 ? #fbbf24 : (index < 12 ? #a78bfa : #38bdf8));
+        }
+    }
+    for band in 4: Text {
+        x: 12px + band * (parent.width - 24px) / 4;
+        y: parent.height - 24px;
+        height: 18px;
+        width: (parent.width - 24px) / 4;
+        text: band == 0 ? (root.reverse ? "Bass · Right" : "Bass · Left")
+            : (band == 1 ? (root.reverse ? "Low · Center" : "Low · WASD")
+            : (band == 2 ? (root.reverse ? "Mids · WASD" : "Mids · Center")
+            : (root.reverse ? "Treble · Left" : "Treble · Right")));
+        color: #b9bac4;
+        font-size: 10px * Theme.text-scale;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+    }
+}
+
+export component AppWindow inherits Window {
+    title: "omend";
+    default-font-size: 14px * Theme.text-scale;
+    init => { Palette.color-scheme = ColorScheme.dark; }
+    preferred-width: 1280px;
+    preferred-height: 800px;
+    min-width: 480px;
+    min-height: 480px;
+    background: root.background-mode == 0 ? #121214 : (root.background-mode == 2
+        ? rgba(24, 26, 34, root.window-opacity / 100) : rgba(18, 18, 20, root.window-opacity / 100));
+    in-out property <int> background-mode: 0;
+    in-out property <float> window-opacity: 90;
+    in-out property <int> accent-choice: 0;
+    in-out property <int> text-size: 1;
+    in-out property <bool> compact-spacing: false;
+    in-out property <int> startup-page: 0;
+    in-out property <bool> remember-page: false;
+    in-out property <int> refresh-choice: 1;
+    in-out property <bool> remember-zone: false;
+    in-out property <bool> preferences-ready: false;
+    in property <string> preferences-path;
+    in property <string> preferences-message: "Changes save automatically";
+    callback preferences-changed();
+    callback reset-preferences();
+    callback copy-blur-setup();
+    function save-preferences() {
+        if (root.preferences-ready) { root.preferences-changed(); }
+    }
+    changed background-mode => { Theme.frosted = root.background-mode == 2; root.save-preferences(); }
+    changed window-opacity => { root.save-preferences(); }
+    changed accent-choice => {
+        Theme.accent = root.accent-choice == 1 ? #8b5cf6 : (root.accent-choice == 2 ? #0891b2 : (root.accent-choice == 3 ? #15803d : (root.accent-choice == 4 ? #b45309 : #ff375f)));
+        root.save-preferences();
+    }
+    changed text-size => { Theme.text-scale = 0.9 + root.text-size * 0.1; root.save-preferences(); }
+    changed compact-spacing => { Theme.compact = root.compact-spacing; root.save-preferences(); }
+    changed startup-page => { root.save-preferences(); }
+    changed remember-page => { root.save-preferences(); }
+    changed refresh-choice => { root.save-preferences(); }
+    changed remember-zone => { root.save-preferences(); }
+    changed page => { if (root.remember-page) { root.save-preferences(); } }
+
+    in property <string> cpu: "–";
+    in property <string> gpu: "–";
+    in property <string> fan1: "–";
+    in property <string> fan2: "–";
+    in property <string> pwm: "–";
+    in property <float> pwm-value: 0;
+    in property <float> cpu-temp: 0;
+    in property <float> gpu-temp: 0;
+    in property <float> fan1-value: 0;
+    in property <float> fan2-value: 0;
+    in property <float> disk-used: 0;
+    in property <string> disk-label: "–";
+    in property <[FanPoint]> preview: [
+        { temp: 40, pct: 27.5 },
+        { temp: 55, pct: 43.1 },
+        { temp: 70, pct: 66.7 },
+        { temp: 80, pct: 86.3 },
+        { temp: 90, pct: 100 },
+        { temp: 90, pct: 100 },
+        { temp: 90, pct: 100 },
+        { temp: 90, pct: 100 },
+    ];
+    in property <int> preview-count: 5;
+    in property <string> curve-caption: "Balanced";
+    in property <string> preset: "–";
+    in property <string> profile: "–";
+    in-out property <string> effect: "static";
+    in property <color> key-wasd: #ff2814;
+    in property <color> key-left: #ff2814;
+    in property <color> key-center: #ff2814;
+    in property <color> key-right: #ff2814;
+    in property <string> note: "";
+    in property <float> live-temp: 0;
+    in property <float> cpu-load: 0;
+    in property <float> gpu-load: 0;
+    in property <float> mem-load: 0;
+    in property <string> cpu-load-label: "0%";
+    in property <string> gpu-load-label: "0%";
+    in property <string> mem-load-label: "0%";
+    in property <string> mem-detail: "–";
+    in property <[FanPoint]> points: [
+        { temp: 40, pct: 27.5 },
+        { temp: 55, pct: 43.1 },
+        { temp: 70, pct: 66.7 },
+        { temp: 80, pct: 86.3 },
+        { temp: 90, pct: 100 },
+        { temp: 90, pct: 100 },
+        { temp: 90, pct: 100 },
+        { temp: 90, pct: 100 },
+    ];
+    in property <int> point-count: 5;
+    in property <int> selected: 0;
+    in property <string> selected-temp: "40.0 °C";
+    in property <string> selected-pct: "27.5 %";
+    in property <string> response-label: "4 s";
+    in property <string> axis-min-label: "20 °C";
+    in property <string> axis-max-label: "120 °C";
+    in property <float> axis-min: 20;
+    in property <float> axis-max: 120;
+    in property <bool> dirty: false;
+    in property <[string]> saved-names;
+    in property <int> saved-count: 0;
+    in property <[CurveChoice]> choices;
+    in property <string> plugged-in: "";
+    in property <string> on-battery: "";
+    in property <string> power-label: "";
+    in-out property <string> curve-name: "";
+    in-out property <int> page: 0;
+    in-out property <float> red: 255;
+    in-out property <float> green: 40;
+    in-out property <float> blue: 20;
+    in-out property <float> brightness: 160;
+    in-out property <string> zone: "all";
+    in-out property <float> speed: 5;
+    in-out property <float> depth: 80;
+    in-out property <float> saturation: 100;
+    in-out property <bool> reverse: false;
+    in property <image> wheel;
+    in-out property <float> marker-x: 160;
+    in-out property <float> marker-y: 110;
+    in-out property <bool> picking: false;
+    in-out property <bool> painting: false;
+    in-out property <float> brush-x: 0;
+    in-out property <float> brush-y: 0;
+    in-out property <float> deck-scale: 1.45;
+    in-out property <bool> deck-custom: false;
+    in-out property <float> deck-x: 0;
+    in-out property <float> deck-y: 0;
+    in-out property <bool> moving-deck: false;
+    in-out property <float> grab-dx: 0;
+    in-out property <float> grab-dy: 0;
+    in property <string> audio-label: "";
+    in property <[float]> audio-spectrum: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    in property <[float]> audio-peaks: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    in property <bool> audio-beat: false;
+    in property <[StepSwatch]> steps: [
+        { r: 255, g: 40, b: 20 },
+        { r: 255, g: 159, b: 26 },
+        { r: 48, g: 209, b: 88 },
+        { r: 10, g: 132, b: 255 },
+    ];
+    in-out property <int> step-picked: 0;
+    in-out property <string> custom-motion: "cycle";
+
+    callback request-preset(string);
+    callback request-profile(string);
+    callback request-effect(string);
+    callback request-style(float, float, float, bool);
+    callback request-rgb(string, float, float, float, float);
+    callback request-brightness(float);
+    callback paint-zone(string);
+    callback paint-release();
+    callback wheel-at(float, float, float, float);
+    callback wheel-release();
+    callback pick-color(float, float, float);
+    callback custom-edit(string);
+    callback zone-changed(string);
+    callback color-changed(string, float, float, float, float);
+    callback graph-press(float, float, float, float);
+    callback graph-drag(float, float, float, float);
+    callback graph-release();
+    callback nudge-temp(float);
+    callback nudge-pct(float);
+    callback nudge-response(float);
+    callback nudge-axis-min(float);
+    callback nudge-axis-max(float);
+    callback request-apply();
+    callback request-cancel();
+    callback request-copy();
+    callback request-paste();
+    callback request-remove-point();
+    callback request-save-curve(string);
+    callback request-delete-curve(string);
+    callback request-load-curve(string);
+    callback request-power-curve(string, string);
+
+    function live-label() -> string {
+        return round(root.live-temp) + " °C";
+    }
+    function swatch(zone: string) -> color {
+        if (zone == "wasd") {
+            return root.key-wasd;
+        }
+        if (zone == "left") {
+            return root.key-left;
+        }
+        if (zone == "center") {
+            return root.key-center;
+        }
+        return root.key-right;
+    }
+    changed zone => {
+        root.zone-changed(root.zone);
+        if (root.remember-zone) { root.save-preferences(); }
+    }
+    changed red => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    changed green => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    changed blue => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    changed brightness => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    changed speed => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    changed depth => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    changed saturation => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    changed reverse => {
+        root.color-changed(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    function push-style() {
+        root.request-style(root.speed, root.depth, root.saturation, root.reverse);
+    }
+    function send-color() {
+        root.request-rgb(root.zone, root.red, root.green, root.blue, root.brightness);
+    }
+    function send-brightness() {
+        root.request-brightness(root.brightness);
+    }
+    function use-effect(name: string) {
+        root.effect = name;
+        root.request-effect(name);
+        root.push-style();
+    }
+    function choose(r: float, g: float, b: float) {
+        root.red = r;
+        root.green = g;
+        root.blue = b;
+        root.pick-color(r, g, b);
+    }
+    function zone-on(zone: string) -> bool {
+        return root.zone == zone || root.zone == "all";
+    }
+    property <float> fitted-deck-scale: min(root.deck-scale, max(0.1, (page-layout.width - 48px) / 560px));
+    function dk(n: float) -> length {
+        return n * root.fitted-deck-scale * 1px;
+    }
+    function zone-at(px: float, py: float) -> string {
+        let s = root.fitted-deck-scale;
+        if (px >= 452 * s && px < 551 * s && py >= 12 * s && py < 132 * s) {
+            return "right";
+        }
+        if (px < 16 * s || py < 12 * s || py >= 132 * s) {
+            return "";
+        }
+        let col = floor((px - 16 * s) / (33 * s));
+        let row = floor((py - 12 * s) / (30 * s));
+        if (row == 0) {
+            if (col < 0 || col > 11) { return ""; }
+            if (col < 4) { return "left"; }
+            if (col < 8) { return "center"; }
+            return "right";
+        }
+        if (row == 1) {
+            if (col < 0 || col > 12) { return ""; }
+            if (col < 2) { return "left"; }
+            if (col == 2) { return "wasd"; }
+            if (col < 7) { return "center"; }
+            return "right";
+        }
+        if (row == 2) {
+            if (col < 0 || col > 11) { return ""; }
+            if (col == 0) { return "left"; }
+            if (col < 4) { return "wasd"; }
+            if (col < 7) { return "center"; }
+            return "right";
+        }
+        if (row == 3) {
+            if (col < 0 || col > 8) { return ""; }
+            if (col < 2) { return "left"; }
+            if (col < 6) { return "center"; }
+            return "right";
+        }
+        return "";
+    }
+    function duty-label() -> string {
+        return round(root.pwm-value / 255 * 100) + "%";
+    }
+    // Keep viewport measurements out of intrinsic layout constraints.
+    property <length> viewport-width: 1280px;
+    property <length> viewport-height: 800px;
+    changed width => { root.viewport-width = self.width; }
+    changed height => { root.viewport-height = self.height; }
+    property <bool> mobile: root.viewport-width < 700px;
+    property <int> card-columns: page-layout.width >= 1000px ? 4 : (page-layout.width >= 560px ? 2 : 1);
+    property <length> metric-height: root.compact-spacing ? 204px : 216px;
+    property <length> gauge-side: root.card-columns == 4
+        ? clamp(min((page-layout.width - 48px) / 4 - 32px, root.viewport-height - 620px), 100px, 180px)
+        : 160px;
+
+    TouchArea {
+        mouse-cursor: default;
+        width: 100%;
+        height: 100%;
+    }
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        VerticalLayout {
+            width: 100%;
+            height: 100%;
+            padding: root.viewport-width < 1200px ? 16px : 24px;
+            padding-top: 40px;
+            spacing: Theme.gap;
+            if root.mobile: HorizontalLayout {
+                height: 36px;
+                spacing: 4px;
+                NavItem { tight: true; horizontal-stretch: 1; preferred-width: 0px; min-width: 0px; label: root.mobile ? "Home" : "Dashboard"; active: root.page == 0; clicked => { root.page = 0; } }
+                NavItem { tight: true; horizontal-stretch: 1; preferred-width: 0px; min-width: 0px; label: root.mobile ? "Power" : "Performance"; active: root.page == 3; clicked => { root.page = 3; } }
+                NavItem { tight: true; horizontal-stretch: 1; preferred-width: 0px; min-width: 0px; label: root.mobile ? "Curve" : "Fan curve"; active: root.page == 1; clicked => { root.page = 1; } }
+                NavItem { tight: true; horizontal-stretch: 1; preferred-width: 0px; min-width: 0px; label: root.mobile ? "Lights" : "Lighting"; active: root.page == 2; clicked => { root.page = 2; } }
+                NavItem { tight: true; horizontal-stretch: 1; preferred-width: 0px; min-width: 0px; label: "Settings"; active: root.page == 4; clicked => { root.page = 4; } }
+                NavItem { tight: true; horizontal-stretch: 1; preferred-width: 0px; min-width: 0px; label: "About"; active: root.page == 5; clicked => { root.page = 5; } }
+            }
+            HorizontalLayout {
+                spacing: Theme.gap;
+                min-height: 0px;
+                if !root.mobile: Rectangle {
+                    width: root.viewport-width < 1200px ? 156px : 200px;
+                    vertical-stretch: 1;
+                    border-radius: 22px;
+                    background: #ffffff10;
+                    border-width: 1px;
+                    border-color: #ffffff1a;
+                    clip: true;
+                    VerticalLayout {
+                        padding: root.viewport-width < 1200px ? 12px : 22px;
+                        spacing: 4px;
+                        Text {
+                            text: "omend";
+                            color: #f5f5f7;
+                            font-size: 20px * Theme.text-scale;
+                            font-weight: 700;
+                        }
+                        Rectangle { height: 18px; }
+                        NavItem { label: root.mobile ? "Home" : "Dashboard"; active: root.page == 0; clicked => { root.page = 0; } }
+                        NavItem { label: root.mobile ? "Power" : "Performance"; active: root.page == 3; clicked => { root.page = 3; } }
+                        NavItem { label: root.mobile ? "Curve" : "Fan curve"; active: root.page == 1; clicked => { root.page = 1; } }
+                        NavItem { label: root.mobile ? "Lights" : "Lighting"; active: root.page == 2; clicked => { root.page = 2; } }
+                        NavItem { label: "Settings"; active: root.page == 4; clicked => { root.page = 4; } }
+                        NavItem { label: "About"; active: root.page == 5; clicked => { root.page = 5; } }
+                        Rectangle { vertical-stretch: 1; }
+                        Text { text: "FAN MODE"; color: #6e6e78; font-size: 11px * Theme.text-scale; letter-spacing: 1px; }
+                        Text { text: root.preset; color: #f5f5f7; font-size: 15px * Theme.text-scale; font-weight: 600; }
+                        Text { text: root.power-label; color: #8a8a96; font-size: 12px * Theme.text-scale; }
+                        Text { text: root.profile; color: #8a8a96; font-size: 12px * Theme.text-scale; }
+                    }
+                }
+                content-area := Rectangle {
+                    horizontal-stretch: 1;
+                    vertical-stretch: 1;
+                    min-width: 0px;
+                    min-height: 0px;
+                    // Keep the pages together on wide monitors instead of stretching
+                    // every card to the full size of the compositor's tile.
+                    page-layout := VerticalLayout {
+                        min-width: 0px;
+                        min-height: 0px;
+                        width: min(parent.width, 1440px);
+                        height: root.card-columns < 4 ? parent.height : min(parent.height, 860px);
+                        x: (parent.width - self.width) / 2;
+                        y: (parent.height - self.height) / 2;
+                        spacing: Theme.gap;
+
+                        if root.page == 5: VerticalLayout {
+                            spacing: Theme.gap;
+                            padding: 20px;
+                            Text { text: "About omend"; color: #f4f4f6; font-size: 26px * Theme.text-scale; font-weight: 700; }
+                            Text { text: "Experimental HP OMEN and Victus hardware control for Linux."; color: #ededf0; wrap: word-wrap; }
+                            Text { text: "Userspace: MIT OR Apache-2.0. Optional kernel module: GPL-2.0-only. Third-party components retain their own licenses; see the bundled notices."; color: #aeaeb8; wrap: word-wrap; }
+                            AboutSlint { }
+                            Rectangle { vertical-stretch: 1; }
+                        }
+
+                        if root.page == 4: settings-scroll := ScrollView {
+                            horizontal-stretch: 1;
+                            vertical-stretch: 1;
+                            mouse-drag-pan-enabled: false;
+                            // Fluent scrollbars overlay the viewport. Reserve a gutter in
+                            // the content so cards and controls never sit beneath them.
+                            horizontal-scrollbar-policy: always-off;
+                            content-width: self.visible-width;
+                            content-height: settings-content.preferred-height;
+                            settings-content := VerticalLayout {
+                                width: parent.width;
+                                padding-right: 24px;
+                                spacing: Theme.gap;
+                                Text { text: "Settings"; color: #f4f4f6; font-size: 26px * Theme.text-scale; font-weight: 700; }
+                                Text { text: "Make omend feel at home. Changes preview immediately and save automatically."; color: #aeaeb8; font-size: 13px * Theme.text-scale; wrap: word-wrap; }
+                                SettingsSection {
+                                    heading: "Appearance";
+                                    SettingField {
+                                        label: "Background";
+                                        ComboBox { model: ["Solid", "Transparent", "Frosted glass"]; current-index <=> root.background-mode; }
+                                    }
+                                    if root.background-mode != 0: SettingField {
+                                        label: "Background opacity · " + round(root.window-opacity) + "%";
+                                        description: "Only the background fades. Text and controls stay readable.";
+                                        Slider { minimum: 40; maximum: 100; value <=> root.window-opacity; }
+                                    }
+                                    SettingField {
+                                        label: "Accent color";
+                                        ComboBox { model: ["Rose", "Violet", "Cyan", "Green", "Amber"]; current-index <=> root.accent-choice; }
+                                    }
+                                    SettingField {
+                                        label: "Text size";
+                                        ComboBox { model: ["Small · 90%", "Default · 100%", "Large · 110%", "Larger · 120%"]; current-index <=> root.text-size; }
+                                    }
+                                    CheckBox { text: "Use compact spacing"; checked <=> root.compact-spacing; }
+                                    Text { text: "Preview: selected controls use your accent; spacing and text size update across every page."; color: #aeaeb8; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+                                }
+                                SettingsSection {
+                                    heading: "Startup";
+                                    CheckBox { text: "Reopen the last page"; checked <=> root.remember-page; }
+                                    if !root.remember-page: SettingField {
+                                        label: "Opening page";
+                                        ComboBox { model: ["Dashboard", "Fan curve", "Lighting", "Performance", "Settings"]; current-index <=> root.startup-page; }
+                                    }
+                                }
+                                SettingsSection {
+                                    heading: "Monitoring and lighting";
+                                    SettingField {
+                                        label: "Dashboard refresh interval";
+                                        description: "Updates monitoring and status polling. Fan control and lighting animations keep running independently.";
+                                        ComboBox { model: ["0.5 seconds", "1 second", "2 seconds", "5 seconds"]; current-index <=> root.refresh-choice; }
+                                    }
+                                    CheckBox { text: "Remember the selected keyboard zone"; checked <=> root.remember-zone; }
+                                }
+                                SettingsSection {
+                                    heading: "Hyprland blur";
+                                    Text { text: "Transparent and frosted backgrounds reveal the desktop. Hyprland supplies the blur; frosted glass adds a softer tint and stronger card surfaces."; color: #c8c8d0; font-size: 13px * Theme.text-scale; wrap: word-wrap; }
+                                    Text { text: "Enable blur in your Hyprland decoration settings. If you have a window rule disabling blur, exclude omend (app ID: omen-gui). Compositor opacity rules can also affect the final appearance."; color: #aeaeb8; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+                                    GhostButton { label: "Copy blur example"; clicked => { root.copy-blur-setup(); } }
+                                    Text { text: "The example uses Hyprland's .conf syntax. For Lua configurations, use the equivalent blur options in your compositor config. Your compositor configuration is never edited by this app."; color: #8a8a96; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+                                }
+                                SettingsSection {
+                                    heading: "Preferences";
+                                    Text { text: root.preferences-message; color: #c8c8d0; font-size: 13px * Theme.text-scale; wrap: word-wrap; }
+                                    Text { text: root.preferences-path; color: #8a8a96; font-size: 11px * Theme.text-scale; wrap: word-wrap; }
+                                    Text { text: "Reset restores appearance, startup, refresh, and zone preferences. Saved fan curves and hardware profiles stay as they are."; color: #aeaeb8; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+                                    GhostButton { label: "Reset to defaults"; clicked => { root.reset-preferences(); } }
+                                }
+                            }
+                        }
+
+                        if root.page == 0: dashboard-scroll := ScrollView {
+                            horizontal-stretch: 1;
+                            vertical-stretch: 1;
+                            mouse-drag-pan-enabled: false;
+                            property <length> pane: self.height;
+                            // Fluent scrollbars overlay the viewport. Reserve a gutter in
+                            // the content so cards and controls never sit beneath them.
+                            horizontal-scrollbar-policy: always-off;
+                            content-width: self.visible-width;
+                            content-height: max(dashboard.preferred-height, pane);
+                            dashboard := VerticalLayout {
+                                width: parent.width;
+                                padding-right: 24px;
+                                height: max(self.preferred-height, dashboard-scroll.pane);
+                                spacing: Theme.gap;
+                                HorizontalLayout {
+                                    Text { text: "Dashboard"; color: #f4f4f6; font-size: 26px * Theme.text-scale; font-weight: 700; vertical-alignment: center; }
+                                    Rectangle { horizontal-stretch: 1; }
+                                    Text { text: root.live-label(); width: 88px; preferred-width: 88px; overflow: elide; color: #30d158; font-size: 16px * Theme.text-scale; font-weight: 600; horizontal-alignment: right; vertical-alignment: center; }
+                                }
+                                Rectangle {
+                                    property <length> cell-height: root.card-columns == 4
+                                    ? clamp(min(root.viewport-height - 64px, 860px) - 468px, 260px, 400px) : 290px;
+                                    height: (4 / root.card-columns) * self.cell-height + (4 / root.card-columns - 1) * Theme.gap;
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 0; columns: root.card-columns; cell-height: parent.cell-height;
+                                        Gauge {
+                                            width: 100%;
+                                            height: 100%;
+                                            ring-size: root.gauge-side;
+                                            title: "GPU";
+                                            value: root.gpu-load;
+                                            value-text: root.gpu-load-label;
+                                            detail: root.gpu;
+                                            caption: "GPU Temperature";
+                                            accent: #c084fc;
+                                        }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 1; columns: root.card-columns; cell-height: parent.cell-height;
+                                        Gauge {
+                                            width: 100%;
+                                            height: 100%;
+                                            ring-size: root.gauge-side;
+                                            title: "CPU";
+                                            value: root.cpu-load;
+                                            value-text: root.cpu-load-label;
+                                            detail: root.cpu;
+                                            caption: "CPU Temperature";
+                                            accent: #a855f7;
+                                        }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 2; columns: root.card-columns; cell-height: parent.cell-height;
+                                        Gauge {
+                                            width: 100%;
+                                            height: 100%;
+                                            ring-size: root.gauge-side;
+                                            title: "MEMORY";
+                                            value: root.mem-load;
+                                            value-text: root.mem-load-label;
+                                            detail: root.mem-detail;
+                                            caption: "In use";
+                                            accent: #7c5cff;
+                                        }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 3; columns: root.card-columns; cell-height: parent.cell-height;
+                                        Rectangle {
+                                            width: 100%;
+                                            height: 100%;
+                                            horizontal-stretch: 1;
+                                            vertical-stretch: 1;
+                                            background: curve-hit.has-hover ? #ffffff28 : (Theme.frosted ? #ffffff20 : #ffffff12);
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: curve-hit.has-hover ? #ffffff33 : #ffffff1a;
+                                            curve-hit := TouchArea {
+                                                mouse-cursor: pointer;
+                                                clicked => { root.page = 1; }
+                                            }
+                                            VerticalLayout {
+                                                width: 100%;
+                                                height: 100%;
+                                                padding: Theme.padding;
+                                                spacing: 8px;
+                                                HorizontalLayout {
+                                                    height: 22px;
+                                                    spacing: 8px;
+                                                    Text { text: "Fan curve"; color: #f5f5f7; font-size: 13px * Theme.text-scale; font-weight: 700; vertical-alignment: center; }
+                                                    Rectangle { horizontal-stretch: 1; min-width: 8px; }
+                                                    Text { text: root.curve-caption; color: #c6f135; font-size: 13px * Theme.text-scale; font-weight: 600; vertical-alignment: center; overflow: elide; }
+                                                }
+                                                MiniCurve {
+                                                    vertical-stretch: 1;
+                                                    points: root.preview;
+                                                    point-count: root.preview-count;
+                                                    live-temp: root.live-temp;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Rectangle {
+                                    height: (4 / root.card-columns) * root.metric-height + (4 / root.card-columns - 1) * Theme.gap;
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 0; columns: root.card-columns; cell-height: root.metric-height;
+                                        Rectangle {
+                                            width: 100%;
+                                            height: 100%;
+                                            horizontal-stretch: 1;
+                                            vertical-stretch: 1;
+                                            background: Theme.frosted ? #ffffff20 : #ffffff12;
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: #ffffff1a;
+                                            VerticalLayout {
+                                                width: 100%;
+                                                height: 100%;
+                                                padding: Theme.padding;
+                                                spacing: Theme.compact ? 10px : 14px;
+                                                Text { text: "System"; height: 22px; color: #f5f5f7; font-size: 15px * Theme.text-scale; font-weight: 700; vertical-alignment: center; }
+                                                MetricLine { label: "CPU"; value: root.cpu; amount: root.cpu-temp; accent: #c084fc; }
+                                                MetricLine { label: "GPU"; value: root.gpu; amount: root.gpu-temp; accent: #a855f7; }
+                                                MetricLine { label: "Memory"; value: root.mem-load-label; amount: root.mem-load; accent: #7c5cff; }
+                                                Rectangle { vertical-stretch: 1; preferred-height: 0px; }
+                                            }
+                                        }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 1; columns: root.card-columns; cell-height: root.metric-height;
+                                        Rectangle {
+                                            width: 100%;
+                                            height: 100%;
+                                            horizontal-stretch: 1;
+                                            vertical-stretch: 1;
+                                            background: Theme.frosted ? #ffffff20 : #ffffff12;
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: #ffffff1a;
+                                            VerticalLayout {
+                                                width: 100%;
+                                                height: 100%;
+                                                padding: Theme.padding;
+                                                spacing: Theme.compact ? 10px : 14px;
+                                                Text { text: "Fans"; height: 22px; color: #f5f5f7; font-size: 15px * Theme.text-scale; font-weight: 700; vertical-alignment: center; }
+                                                MetricLine { label: "Fan 1"; value: root.fan1 + " RPM"; amount: root.fan1-value / 70; accent: #5ac8fa; }
+                                                MetricLine { label: "Fan 2"; value: root.fan2 + " RPM"; amount: root.fan2-value / 70; accent: #5ac8fa; }
+                                                MetricLine { label: "Duty"; value: root.duty-label(); amount: root.pwm-value / 255 * 100; accent: #30d158; }
+                                                Rectangle { vertical-stretch: 1; preferred-height: 0px; }
+                                            }
+                                        }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 2; columns: root.card-columns; cell-height: root.metric-height;
+                                        Rectangle {
+                                            width: 100%;
+                                            height: 100%;
+                                            horizontal-stretch: 1;
+                                            vertical-stretch: 1;
+                                            background: light-hit.has-hover ? #ffffff28 : (Theme.frosted ? #ffffff20 : #ffffff12);
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: light-hit.has-hover ? #ffffff33 : #ffffff1a;
+                                            light-hit := TouchArea {
+                                                mouse-cursor: pointer;
+                                                clicked => { root.page = 2; }
+                                            }
+                                            VerticalLayout {
+                                                width: 100%;
+                                                height: 100%;
+                                                padding: Theme.padding;
+                                                spacing: Theme.compact ? 10px : 14px;
+                                                Text { text: "Lighting"; height: 22px; color: #f5f5f7; font-size: 15px * Theme.text-scale; font-weight: 700; vertical-alignment: center; }
+                                                MetricLine { meter: false; label: "Effect"; value: root.effect; }
+                                                MetricLine { meter: false; label: "Power"; value: root.profile; }
+                                                Rectangle { vertical-stretch: 1; preferred-height: 0px; }
+                                                Text { text: "Open lighting"; height: 20px; color: light-hit.has-hover ? #ffffff : #aeaeb2; font-size: 12px * Theme.text-scale; vertical-alignment: center; }
+                                            }
+                                        }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 3; columns: root.card-columns; cell-height: root.metric-height;
+                                        Rectangle {
+                                            width: 100%;
+                                            height: 100%;
+                                            horizontal-stretch: 1;
+                                            vertical-stretch: 1;
+                                            background: Theme.frosted ? #ffffff20 : #ffffff12;
+                                            border-radius: 16px;
+                                            border-width: 1px;
+                                            border-color: #ffffff1a;
+                                            VerticalLayout {
+                                                width: 100%;
+                                                height: 100%;
+                                                padding: Theme.padding;
+                                                spacing: Theme.compact ? 10px : 14px;
+                                                Text { text: "Disk"; height: 22px; color: #f5f5f7; font-size: 15px * Theme.text-scale; font-weight: 700; vertical-alignment: center; }
+                                                MetricLine { label: "Root"; value: root.disk-label; amount: root.disk-used; accent: #ff9f0a; }
+                                                Text {
+                                                    text: round(root.disk-used) + "% used";
+                                                    height: 20px;
+                                                    color: #8e8e93;
+                                                    font-size: 12px * Theme.text-scale;
+                                                    vertical-alignment: center;
+                                                }
+                                                Rectangle { vertical-stretch: 1; preferred-height: 0px; }
+                                            }
+                                        }
+                                    }
+                                }
+                                Text {
+                                    text: "Fan mode";
+                                    color: #8e8e93;
+                                    font-size: 12px * Theme.text-scale;
+                                    font-weight: 600;
+                                    horizontal-alignment: left;
+                                }
+                                Rectangle {
+                                    property <int> columns: root.card-columns == 4 ? 5 : (self.width >= 560px ? 3 : 2);
+                                    height: ceil(5 / self.columns) * 64px + (ceil(5 / self.columns) - 1) * Theme.gap;
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 0; columns: parent.columns; cell-height: 64px;
+                                        ModeCard {
+                                            width: 100%;
+                                            height: 100%; title: "Quiet"; hint: "Low noise"; selected: root.preset == "quiet"; clicked => { root.request-preset("quiet"); } }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 1; columns: parent.columns; cell-height: 64px;
+                                        ModeCard {
+                                            width: 100%;
+                                            height: 100%; title: "Balanced"; hint: "Daily"; selected: root.preset == "balanced"; clicked => { root.request-preset("balanced"); } }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 2; columns: parent.columns; cell-height: 64px;
+                                        ModeCard {
+                                            width: 100%;
+                                            height: 100%; title: "Max"; hint: "Full speed"; selected: root.preset == "max"; clicked => { root.request-preset("max"); } }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 3; columns: parent.columns; cell-height: 64px;
+                                        ModeCard {
+                                            width: 100%;
+                                            height: 100%; title: "BIOS"; hint: "Firmware"; selected: root.preset == "auto"; clicked => { root.request-preset("auto"); } }
+                                    }
+                                    CardCell {
+                                        available-width: parent.width;
+                                        index: 4; columns: parent.columns; cell-height: 64px;
+                                        ModeCard {
+                                            width: 100%;
+                                            height: 100%; title: "Custom"; hint: "Edit curve"; selected: root.preset == "custom" || root.page == 1; clicked => { root.page = 1; } }
+                                    }
+                                }
+                                Text { text: root.note; height: 16px; overflow: elide; color: #6e6e78; font-size: 12px * Theme.text-scale; }
+                            }
+                        }
+
+                        if root.page == 3: performance-scroll := ScrollView {
+                            width: 100%;
+                            height: 100%;
+                            mouse-drag-pan-enabled: false;
+                            property <length> pane: self.height;
+                            // Fluent scrollbars overlay the viewport. Reserve a gutter in
+                            // the content so cards and controls never sit beneath them.
+                            horizontal-scrollbar-policy: always-off;
+                            content-width: self.visible-width;
+                            content-height: max(performance-content.preferred-height, pane);
+                            performance-content := VerticalLayout {
+                                width: parent.width;
+                                padding-right: 24px;
+                                height: max(self.preferred-height, performance-scroll.pane);
+                                vertical-stretch: 1;
+                                spacing: Theme.gap;
+                                Text { text: "Performance"; color: #f4f4f6; font-size: 26px * Theme.text-scale; font-weight: 700; }
+                                Text {
+                                    text: "Platform power target. Fan behavior stays on the curve unless you change fan mode.";
+                                    color: #8a8a96;
+                                    font-size: 13px * Theme.text-scale;
+                                    wrap: word-wrap;
+                                }
+                                HorizontalLayout {
+                                    spacing: Theme.gap;
+                                    width: 100%;
+                                    ModeCard { title: "Eco"; hint: "Low power"; selected: root.profile == "low-power"; clicked => { root.request-profile("low-power"); } }
+                                    ModeCard { title: "Balanced"; hint: "Default"; selected: root.profile == "balanced"; clicked => { root.request-profile("balanced"); } }
+                                    ModeCard { title: "Performance"; hint: "High power"; selected: root.profile == "performance"; clicked => { root.request-profile("performance"); } }
+                                }
+                                Rectangle {
+                                    vertical-stretch: 1;
+                                    min-height: 140px;
+                                    background: Theme.frosted ? #ffffff20 : #ffffff12;
+                                    border-radius: 20px;
+                                    border-width: 1px;
+                                    border-color: #ffffff1a;
+                                    VerticalLayout {
+                                        alignment: center;
+                                        spacing: 4px;
+                                        Text { text: root.fan1; color: #f7f7f8; font-size: 56px * Theme.text-scale; font-weight: 700; horizontal-alignment: center; }
+                                        Text { text: "FAN 1 RPM"; color: #8a8a96; font-size: 13px * Theme.text-scale; letter-spacing: 2px; horizontal-alignment: center; }
+                                        Text { text: "Fan 2  " + root.fan2 + " RPM"; color: #8a8a96; font-size: 13px * Theme.text-scale; horizontal-alignment: center; }
+                                    }
+                                }
+                                Rectangle {
+                                    property <int> columns: page-layout.width < 560px ? 1 : 3;
+                                    height: (3 / self.columns) * 84px + (3 / self.columns - 1) * Theme.gap;
+                                    CardCell {
+                                        index: 0; columns: parent.columns; cell-height: 84px;
+                                        available-width: parent.width;
+                                        Readout { width: 100%; caption: "CPU"; value: root.cpu; unit: ""; }
+                                    }
+                                    CardCell {
+                                        index: 1; columns: parent.columns; cell-height: 84px;
+                                        available-width: parent.width;
+                                        Readout { width: 100%; caption: "GPU"; value: root.gpu; unit: ""; }
+                                    }
+                                    CardCell {
+                                        index: 2; columns: parent.columns; cell-height: 84px;
+                                        available-width: parent.width;
+                                        Readout { width: 100%; caption: "Control"; value: root.live-label(); unit: "hotter"; }
+                                    }
+                                }
+                                Text { text: root.note; color: #6e6e78; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+                            }
+                        }
+
+                        if root.page == 1: fan-scroll := ScrollView {
+                            width: 100%;
+                            height: 100%;
+                            mouse-drag-pan-enabled: false;
+                            property <length> pane: self.height;
+                            // Fluent scrollbars overlay the viewport. Reserve a gutter in
+                            // the content so cards and controls never sit beneath them.
+                            horizontal-scrollbar-policy: always-off;
+                            content-width: self.visible-width;
+                            content-height: max(fan-content.preferred-height, pane);
+                            fan-content := VerticalLayout {
+                                width: parent.width;
+                                padding-right: 24px;
+                                height: max(self.preferred-height, fan-scroll.pane);
+                                spacing: Theme.gap;
+                                vertical-stretch: 1;
+                                HorizontalLayout {
+                                    spacing: 12px;
+                                    Text { text: "Fan curve"; color: #f4f4f6; font-size: 26px * Theme.text-scale; font-weight: 700; vertical-alignment: center; }
+                                    Rectangle { horizontal-stretch: 1; }
+                                    GhostButton { label: "Copy"; clicked => { root.request-copy(); } }
+                                    GhostButton { label: "Paste"; clicked => { root.request-paste(); } }
+                                }
+                                HorizontalLayout {
+                                    spacing: 12px;
+                                    Text {
+                                        text: root.live-label() + "  ·  hotter of CPU and GPU";
+                                        color: #c8c8d0;
+                                        font-size: 13px * Theme.text-scale;
+                                        vertical-alignment: center;
+                                    }
+                                    Rectangle { horizontal-stretch: 1; }
+                                    Stepper {
+                                        caption: "Spin-down delay";
+                                        value: root.response-label;
+                                        down => { root.nudge-response(-1); }
+                                        up => { root.nudge-response(1); }
+                                        min-width: 150px;
+                                        max-width: 200px;
+                                        horizontal-stretch: 0;
+                                    }
+                                }
+                                Rectangle {
+                                    vertical-stretch: 1;
+                                    min-height: 160px;
+                                    // Both axes use the plot's coordinates, including the
+                                    // endpoints, rather than eleven equally sized cells.
+                                    plot := CurvePlot {
+                                        x: 44px;
+                                        y: 8px;
+                                        width: parent.width - 60px;
+                                        height: parent.height - 36px;
+                                        points: root.points;
+                                        point-count: root.point-count;
+                                        selected: root.selected;
+                                        axis-min: root.axis-min;
+                                        axis-max: root.axis-max;
+                                        live-temp: root.live-temp;
+                                        press(x, y, w, h) => { root.graph-press(x, y, w, h); }
+                                        drag(x, y, w, h) => { root.graph-drag(x, y, w, h); }
+                                        release => { root.graph-release(); }
+                                    }
+                                    for band in 11: Text {
+                                        x: 0px;
+                                        y: plot.y + band * plot.height / 10 - self.height / 2;
+                                        width: 36px;
+                                        height: 16px;
+                                        text: (100 - band * 10) + "%";
+                                        color: #6e6e78;
+                                        font-size: 11px * Theme.text-scale;
+                                        horizontal-alignment: right;
+                                        vertical-alignment: center;
+                                    }
+                                    for tick in 11: Text {
+                                        x: plot.x + tick * plot.width / 10 - self.width / 2;
+                                        y: plot.y + plot.height + 8px;
+                                        width: 32px;
+                                        height: 16px;
+                                        text: round(root.axis-min + (root.axis-max - root.axis-min) * tick / 10);
+                                        color: #6e6e78;
+                                        font-size: 11px * Theme.text-scale;
+                                        horizontal-alignment: center;
+                                    }
+                                }
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    Stepper { caption: "Temperature"; value: root.selected-temp; down => { root.nudge-temp(-0.5); } up => { root.nudge-temp(0.5); } horizontal-stretch: 1; }
+                                    Stepper { caption: "Fan duty"; value: root.selected-pct; down => { root.nudge-pct(-1); } up => { root.nudge-pct(1); } horizontal-stretch: 1; }
+                                    Stepper { caption: "Min temp"; value: root.axis-min-label; down => { root.nudge-axis-min(-5); } up => { root.nudge-axis-min(5); } horizontal-stretch: 1; }
+                                    Stepper { caption: "Max temp"; value: root.axis-max-label; down => { root.nudge-axis-max(-5); } up => { root.nudge-axis-max(5); } horizontal-stretch: 1; }
+                                }
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    GhostButton { label: "Remove point"; clicked => { root.request-remove-point(); } }
+                                    Text {
+                                        text: root.dirty ? "Unapplied changes" : "Click empty space to add a point. Drag to reshape.";
+                                        color: #8a8a96;
+                                        font-size: 12px * Theme.text-scale;
+                                        vertical-alignment: center;
+                                        horizontal-stretch: 1;
+                                        overflow: elide;
+                                    }
+                                    GhostButton { label: "Cancel"; clicked => { root.request-cancel(); } }
+                                    GhostButton { label: "Apply"; primary: true; clicked => { root.request-apply(); } }
+                                }
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    Rectangle {
+                                        horizontal-stretch: 1;
+                                        height: 34px;
+                                        border-radius: 10px;
+                                        background: Theme.frosted ? #ffffff20 : #ffffff12;
+                                        border-width: 1px;
+                                        border-color: #ffffff1c;
+                                        LineEdit {
+                                            width: 100%;
+                                            height: 100%;
+                                            text <=> root.curve-name;
+                                            placeholder-text: "Name this curve";
+                                            font-size: 13px * Theme.text-scale;
+                                        }
+                                    }
+                                    GhostButton { label: "Save"; clicked => { root.request-save-curve(root.curve-name); } }
+                                    GhostButton { label: "Delete"; clicked => { root.request-delete-curve(root.curve-name); } }
+                                }
+                                if root.saved-count == 0: Text {
+                                    text: "Save a curve to keep it. Click a saved name to load it back into the graph.";
+                                    color: #8a8a96;
+                                    font-size: 12px * Theme.text-scale;
+                                }
+                                if root.saved-count > 0: HorizontalLayout {
+                                    spacing: 6px;
+                                    alignment: start;
+                                    for name in root.saved-names: Chip {
+                                        label: name;
+                                        selected: root.curve-name == name;
+                                        clicked => { root.request-load-curve(name); }
+                                    }
+                                }
+                                HorizontalLayout {
+                                    spacing: 6px;
+                                    alignment: center;
+                                    Text {
+                                        text: "Wall power";
+                                        color: #c8c8d0;
+                                        font-size: 12px * Theme.text-scale;
+                                        font-weight: 600;
+                                        min-width: 78px;
+                                        vertical-alignment: center;
+                                    }
+                                    ScrollView {
+                                        height: 28px;
+                                        horizontal-stretch: 1;
+                                        min-width: 0px;
+                                        mouse-drag-pan-enabled: false;
+                                        content-width: ac-choices.preferred-width;
+                                        content-height: 28px;
+                                        ac-choices := HorizontalLayout {
+                                            spacing: 6px;
+                                            for choice in root.choices: Chip {
+                                                label: choice.label;
+                                                selected: root.plugged-in == choice.id;
+                                                clicked => { root.request-power-curve("ac", choice.id); }
+                                            }
+                                        }
+                                    }
+                                }
+                                HorizontalLayout {
+                                    spacing: 6px;
+                                    alignment: center;
+                                    Text {
+                                        text: "Battery";
+                                        color: #c8c8d0;
+                                        font-size: 12px * Theme.text-scale;
+                                        font-weight: 600;
+                                        min-width: 78px;
+                                        vertical-alignment: center;
+                                    }
+                                    ScrollView {
+                                        height: 28px;
+                                        horizontal-stretch: 1;
+                                        min-width: 0px;
+                                        mouse-drag-pan-enabled: false;
+                                        content-width: battery-choices.preferred-width;
+                                        content-height: 28px;
+                                        battery-choices := HorizontalLayout {
+                                            spacing: 6px;
+                                            for choice in root.choices: Chip {
+                                                label: choice.label;
+                                                selected: root.on-battery == choice.id;
+                                                clicked => { root.request-power-curve("battery", choice.id); }
+                                            }
+                                        }
+                                    }
+                                }
+                                Text {
+                                    text: "Wall power and battery switch when you plug in or unplug. Manual leaves the fan mode alone.";
+                                    color: #6e6e78;
+                                    font-size: 12px * Theme.text-scale;
+                                    wrap: word-wrap;
+                                }
+                                Text { text: root.note; color: #6e6e78; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+                            }
+                        }
+
+                        if root.page == 2: scroll := ScrollView {
+                            width: 100%;
+                            height: 100%;
+                            vertical-stretch: 1;
+                            mouse-drag-pan-enabled: false;
+                            property <length> pane: self.height;
+                            // Fluent scrollbars overlay the viewport. Reserve a gutter in
+                            // the content so cards and controls never sit beneath them.
+                            horizontal-scrollbar-policy: always-off;
+                            content-width: self.visible-width;
+                            content-height: max(lighting.preferred-height, pane);
+                            lighting := VerticalLayout {
+                                width: parent.width;
+                                padding-right: 24px;
+                                height: max(self.preferred-height, scroll.pane);
+                                spacing: Theme.gap;
+                                Text { text: "Lighting"; color: #f4f4f6; font-size: 22px * Theme.text-scale; font-weight: 700; }
+                                Rectangle {
+                                    vertical-stretch: 1;
+                                    min-height: root.effect == "audio" ? 340px : 240px;
+                                    preferred-height: root.effect == "audio" ? 420px : 320px;
+                                    max-height: 420px;
+                                    clip: true;
+                                    background: #06080f;
+                                    border-radius: 18px;
+                                    border-width: 1px;
+                                    border-color: #5eead444;
+                                    Rectangle { x: 14px; y: 12px; width: 16px; height: 2px; background: #5eead4; }
+                                    Rectangle { x: 14px; y: 12px; width: 2px; height: 16px; background: #5eead4; }
+                                    Rectangle { x: parent.width - 30px; y: 12px; width: 16px; height: 2px; background: #f472b6; }
+                                    Rectangle { y: 12px; x: parent.width - 16px; width: 2px; height: 16px; background: #f472b6; }
+                                    Rectangle { x: 14px; y: parent.height - 14px; width: 16px; height: 2px; background: #5eead4; }
+                                    Rectangle { x: 14px; y: parent.height - 28px; width: 2px; height: 16px; background: #5eead4; }
+                                    Rectangle { x: parent.width - 30px; y: parent.height - 14px; width: 16px; height: 2px; background: #f472b6; }
+                                    Rectangle { x: parent.width - 16px; y: parent.height - 28px; width: 2px; height: 16px; background: #f472b6; }
+                                    Text { x: 36px; y: 8px; text: "CANVAS"; color: #5eead4; font-size: 10px * Theme.text-scale; font-weight: 700; letter-spacing: 2px; }
+                                    board := Rectangle {
+                                        x: root.deck-custom ? root.deck-x * 1px : (parent.width - self.width) / 2;
+                                        y: root.deck-custom ? root.deck-y * 1px : (parent.height - (root.effect == "audio" ? 110px : 0px) - self.height) / 2;
+                                        width: root.dk(560);
+                                        // The keys occupy y=12..124; balance the empty
+                                        // space above and below them when centering.
+                                        height: root.dk(136);
+                                        DeckKey { x: root.dk(16 + 0 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 1 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 2 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 3 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 4 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 5 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 6 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 7 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 8 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 9 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 10 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 11 * 33); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 0 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 1 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 2 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("wasd"); active: root.zone-on("wasd"); }
+                                        DeckKey { x: root.dk(16 + 3 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 4 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 5 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 6 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 7 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 8 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 9 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 10 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 11 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 12 * 33); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 0 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 1 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("wasd"); active: root.zone-on("wasd"); }
+                                        DeckKey { x: root.dk(16 + 2 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("wasd"); active: root.zone-on("wasd"); }
+                                        DeckKey { x: root.dk(16 + 3 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("wasd"); active: root.zone-on("wasd"); }
+                                        DeckKey { x: root.dk(16 + 4 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 5 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 6 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(16 + 7 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 8 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 9 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 10 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 11 * 33); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(16 + 0 * 33); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 1 * 33); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("left"); active: root.zone-on("left"); }
+                                        DeckKey { x: root.dk(16 + 2 * 33); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); }
+                                        DeckKey { x: root.dk(115); y: root.dk(102); width: root.dk(94); height: root.dk(22); fill: root.swatch("center"); active: root.zone-on("center"); wide: true; }
+                                        DeckKey { x: root.dk(214); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(247); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(280); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(452); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(485); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(518); y: root.dk(12); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(452); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(485); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(518); y: root.dk(42); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(452); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(485); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(518); y: root.dk(72); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(452); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(485); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                        DeckKey { x: root.dk(518); y: root.dk(102); width: root.dk(28); height: root.dk(22); fill: root.swatch("right"); active: root.zone-on("right"); }
+                                    }
+                                    if root.effect == "audio": AudioSpectrum {
+                                        x: 16px;
+                                        y: parent.height - 112px;
+                                        width: parent.width - 32px;
+                                        height: 96px;
+                                        levels: root.audio-spectrum;
+                                        peaks: root.audio-peaks;
+                                        beat: root.audio-beat;
+                                        reverse: root.reverse;
+                                    }
+                                    canvas-hit := TouchArea {
+                                        width: 100%;
+                                        height: 100%;
+                                        mouse-cursor: pointer;
+                                        pointer-event(event) => {
+                                            if (event.button == PointerEventButton.left && event.kind == PointerEventKind.down) {
+                                                let lx = canvas-hit.mouse-x / 1px - board.x / 1px;
+                                                let ly = canvas-hit.mouse-y / 1px - board.y / 1px;
+                                                let zone = root.zone-at(lx, ly);
+                                                if (zone == "") {
+                                                    root.moving-deck = true;
+                                                    root.deck-custom = true;
+                                                    root.deck-x = board.x / 1px;
+                                                    root.deck-y = board.y / 1px;
+                                                    root.grab-dx = lx;
+                                                    root.grab-dy = ly;
+                                                } else {
+                                                    root.painting = true;
+                                                    root.brush-x = canvas-hit.mouse-x / 1px;
+                                                    root.brush-y = canvas-hit.mouse-y / 1px;
+                                                    root.paint-zone(zone);
+                                                }
+                                            }
+                                            if (event.kind == PointerEventKind.up) {
+                                                if (root.painting) {
+                                                    root.painting = false;
+                                                    root.paint-release();
+                                                }
+                                                root.moving-deck = false;
+                                            }
+                                        }
+                                        moved => {
+                                            if (root.moving-deck) {
+                                                let bw = board.width / 1px;
+                                                let bh = board.height / 1px;
+                                                let vw = canvas-hit.width / 1px;
+                                                let vh = canvas-hit.height / 1px;
+                                                let nx = canvas-hit.mouse-x / 1px - root.grab-dx;
+                                                let ny = canvas-hit.mouse-y / 1px - root.grab-dy;
+                                                root.deck-x = clamp(nx, 80 - bw, max(vw - 80, 0));
+                                                root.deck-y = clamp(ny, 48 - bh, max(vh - 48, 0));
+                                            }
+                                            if (root.painting) {
+                                                root.brush-x = canvas-hit.mouse-x / 1px;
+                                                root.brush-y = canvas-hit.mouse-y / 1px;
+                                                root.paint-zone(root.zone-at(root.brush-x - board.x / 1px, root.brush-y - board.y / 1px));
+                                            }
+                                        }
+                                    }
+                                    Rectangle {
+                                        visible: root.painting;
+                                        x: root.brush-x * 1px - 14px;
+                                        y: root.brush-y * 1px - 14px;
+                                        width: 28px;
+                                        height: 28px;
+                                        border-radius: 14px;
+                                        border-width: 2px;
+                                        border-color: #ffffff;
+                                        background: rgb(root.red, root.green, root.blue);
+                                        opacity: 0.85;
+                                    }
+                                }
+                                HorizontalLayout {
+                                    spacing: 6px;
+                                    alignment: center;
+                                    Pill { label: "All"; selected: root.zone == "all"; clicked => { root.zone = "all"; } }
+                                    Pill { label: "WASD"; selected: root.zone == "wasd"; clicked => { root.zone = "wasd"; } }
+                                    Pill { label: "Left"; selected: root.zone == "left"; clicked => { root.zone = "left"; } }
+                                    Pill { label: "Center"; selected: root.zone == "center"; clicked => { root.zone = "center"; } }
+                                    Pill { label: "Right"; selected: root.zone == "right"; clicked => { root.zone = "right"; } }
+                                }
+                                Rectangle {
+                                    property <int> columns: page-layout.width >= 700px ? 3 : (page-layout.width >= 500px ? 2 : 1);
+                                    height: self.columns == 3 ? 260px : (self.columns == 2 ? 456px : 732px);
+                                    VerticalLayout {
+                                        width: 168px;
+                                        height: 260px;
+                                        x: parent.columns == 1 ? (parent.width - 168px) / 2 : (parent.width - (parent.columns == 3 ? 664px : 468px)) / 2;
+                                        y: 0px;
+                                        cross-axis-alignment: center;
+                                        spacing: 10px;
+                                        alignment: center;
+                                        horizontal-stretch: 0;
+                                        Rectangle {
+                                            width: 168px;
+                                            height: 168px;
+                                            Image {
+                                                width: 100%;
+                                                height: 100%;
+                                                source: root.wheel;
+                                                image-fit: fill;
+                                            }
+                                            Rectangle {
+                                                x: root.marker-x * 1px - 8px;
+                                                y: root.marker-y * 1px - 8px;
+                                                width: 16px;
+                                                height: 16px;
+                                                border-radius: 8px;
+                                                border-width: 2px;
+                                                border-color: #ffffff;
+                                                background: #00000033;
+                                            }
+                                            wheel-hit := TouchArea {
+                                                mouse-cursor: pointer;
+                                                pointer-event(event) => {
+                                                    if (event.button == PointerEventButton.left && event.kind == PointerEventKind.down) {
+                                                        root.picking = true;
+                                                        root.wheel-at(wheel-hit.mouse-x / 1px, wheel-hit.mouse-y / 1px, wheel-hit.width / 1px, wheel-hit.height / 1px);
+                                                    }
+                                                    if (event.kind == PointerEventKind.up && root.picking) {
+                                                        root.picking = false;
+                                                        root.wheel-release();
+                                                    }
+                                                }
+                                                moved => {
+                                                    if (root.picking) {
+                                                        root.wheel-at(wheel-hit.mouse-x / 1px, wheel-hit.mouse-y / 1px, wheel-hit.width / 1px, wheel-hit.height / 1px);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        HorizontalLayout {
+                                            spacing: 6px;
+                                            alignment: center;
+                                            Swatch { fill: #ff3b30; picked => { root.choose(255, 59, 48); } }
+                                            Swatch { fill: #ff9f1a; picked => { root.choose(255, 159, 26); } }
+                                            Swatch { fill: #ffd60a; picked => { root.choose(255, 214, 10); } }
+                                            Swatch { fill: #c6f135; picked => { root.choose(198, 241, 53); } }
+                                            Swatch { fill: #30d158; picked => { root.choose(48, 209, 88); } }
+                                        }
+                                        HorizontalLayout {
+                                            spacing: 6px;
+                                            alignment: center;
+                                            Swatch { fill: #64d2ff; picked => { root.choose(100, 210, 255); } }
+                                            Swatch { fill: #0a84ff; picked => { root.choose(10, 132, 255); } }
+                                            Swatch { fill: #bf5af2; picked => { root.choose(191, 90, 242); } }
+                                            Swatch { fill: #ff375f; picked => { root.choose(255, 55, 95); } }
+                                            Swatch { fill: #ffffff; picked => { root.choose(255, 255, 255); } }
+                                        }
+                                    }
+                                    VerticalLayout {
+                                        width: 264px;
+                                        height: 260px;
+                                        x: parent.columns == 1 ? (parent.width - 264px) / 2 : (parent.width - (parent.columns == 3 ? 664px : 468px)) / 2 + 204px;
+                                        y: parent.columns == 1 ? 276px : 0px;
+                                        cross-axis-alignment: center;
+                                        spacing: 8px;
+                                        alignment: center;
+                                        horizontal-stretch: 0;
+                                        HorizontalLayout {
+                                            spacing: 10px;
+                                            alignment: center;
+                                            Rectangle {
+                                                width: 36px;
+                                                height: 36px;
+                                                border-radius: 8px;
+                                                background: rgb(root.red, root.green, root.blue);
+                                                border-width: 1px;
+                                                border-color: #ffffff28;
+                                            }
+                                            Text {
+                                                text: "Zone color";
+                                                color: #f4f4f8;
+                                                font-size: 13px * Theme.text-scale;
+                                                font-weight: 600;
+                                                vertical-alignment: center;
+                                            }
+                                        }
+                                        StudioSlider { label: "Brightness"; minimum: 0; maximum: 255; value <=> root.brightness; released => { root.send-brightness(); } }
+                                        StudioSlider { label: root.effect == "audio" ? "Response" : "Speed"; minimum: 1; maximum: 10; value <=> root.speed; released => { root.push-style(); } }
+                                        StudioSlider { label: root.effect == "audio" ? "Contrast" : "Depth"; minimum: 0; maximum: 100; value <=> root.depth; released => { root.push-style(); } }
+                                        StudioSlider { label: "Color"; minimum: 0; maximum: 100; value <=> root.saturation; released => { root.push-style(); } }
+                                        HorizontalLayout {
+                                            spacing: 6px;
+                                            alignment: center;
+                                            Pill { label: "Forward"; selected: !root.reverse; clicked => { root.reverse = false; root.push-style(); } }
+                                            Pill { label: "Reverse"; selected: root.reverse; clicked => { root.reverse = true; root.push-style(); } }
+                                        }
+                                        HorizontalLayout {
+                                            alignment: center;
+                                            GhostButton {
+                                                label: "Apply";
+                                                primary: true;
+                                                clicked => { root.send-color(); root.push-style(); }
+                                            }
+                                        }
+                                    }
+                                    VerticalLayout {
+                                        width: 160px;
+                                        height: 180px;
+                                        x: parent.columns == 3 ? (parent.width - 664px) / 2 + 504px : (parent.width - 160px) / 2;
+                                        y: parent.columns == 3 ? 0px : (parent.columns == 2 ? 276px : 552px);
+                                        cross-axis-alignment: center;
+                                        spacing: 6px;
+                                        alignment: start;
+                                        horizontal-stretch: 0;
+                                        HorizontalLayout {
+                                            spacing: 6px;
+                                            alignment: start;
+                                            VerticalLayout {
+                                                spacing: 6px;
+                                                alignment: start;
+                                                horizontal-stretch: 0;
+                                                Pill { label: "Static"; selected: root.effect == "static"; clicked => { root.use-effect("static"); } }
+                                                Pill { label: "Breathing"; selected: root.effect == "breathing"; clicked => { root.use-effect("breathing"); } }
+                                                Pill { label: "Wave"; selected: root.effect == "wave"; clicked => { root.use-effect("wave"); } }
+                                                Pill { label: "Rainbow"; selected: root.effect == "rainbow"; clicked => { root.use-effect("rainbow"); } }
+                                                Pill { label: "Custom"; selected: root.effect == "custom"; clicked => { root.use-effect("custom"); } }
+                                            }
+                                            VerticalLayout {
+                                                spacing: 6px;
+                                                alignment: start;
+                                                horizontal-stretch: 0;
+                                                Pill { label: "Comet"; selected: root.effect == "comet"; clicked => { root.use-effect("comet"); } }
+                                                Pill { label: "Strobe"; selected: root.effect == "strobe"; clicked => { root.use-effect("strobe"); } }
+                                                Pill { label: "Spark"; selected: root.effect == "spark"; clicked => { root.use-effect("spark"); } }
+                                                Pill { label: "Audio"; selected: root.effect == "audio"; clicked => { root.use-effect("audio"); } }
+                                            }
+                                        }
+                                    }
+                                }
+                                if root.effect == "custom": VerticalLayout {
+                                    spacing: 8px;
+                                    alignment: center;
+                                    HorizontalLayout {
+                                        spacing: 6px;
+                                        alignment: center;
+                                        Pill { label: "Cycle"; selected: root.custom-motion == "cycle"; clicked => { root.custom-motion = "cycle"; root.custom-edit("motion"); } }
+                                        Pill { label: "Chase"; selected: root.custom-motion == "chase"; clicked => { root.custom-motion = "chase"; root.custom-edit("motion"); } }
+                                        Pill { label: "Pulse"; selected: root.custom-motion == "pulse"; clicked => { root.custom-motion = "pulse"; root.custom-edit("motion"); } }
+                                    }
+                                    HorizontalLayout {
+                                        spacing: 6px;
+                                        alignment: center;
+                                        for step[index] in root.steps: Rectangle {
+                                            width: 28px;
+                                            height: 28px;
+                                            border-radius: 8px;
+                                            background: rgb(step.r, step.g, step.b);
+                                            border-width: root.step-picked == index ? 2px : 1px;
+                                            border-color: root.step-picked == index ? #ffffff : #ffffff28;
+                                            TouchArea {
+                                                mouse-cursor: pointer;
+                                                clicked => { root.step-picked = index; }
+                                            }
+                                        }
+                                    }
+                                    HorizontalLayout {
+                                        spacing: 6px;
+                                        alignment: center;
+                                        Pill { label: "Add"; clicked => { root.custom-edit("add"); } }
+                                        Pill { label: "Set"; clicked => { root.custom-edit("paint"); } }
+                                        Pill { label: "Remove"; clicked => { root.custom-edit("remove"); } }
+                                    }
+                                    Text {
+                                        text: "Add a wheel color, Set replaces the selected step, and Remove drops it. Cycle, chase, and pulse play those colors.";
+                                        color: #6e6e78;
+                                        font-size: 11px * Theme.text-scale;
+                                        wrap: word-wrap;
+                                        horizontal-alignment: center;
+                                    }
+                                }
+                                if root.effect == "audio": Text { text: root.audio-label + (root.audio-beat ? " · Beat" : ""); color: #8a8a96; font-size: 12px * Theme.text-scale; horizontal-alignment: center; }
+                                Text { text: "Drag across the keys to paint a zone. Drag empty canvas to move the keyboard. Presets sit beside the sliders."; color: #6e6e78; font-size: 11px * Theme.text-scale; wrap: word-wrap; horizontal-alignment: center; }
+                                Text { text: root.note; color: #6e6e78; font-size: 12px * Theme.text-scale; wrap: word-wrap; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

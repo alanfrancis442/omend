@@ -1,0 +1,20 @@
+[package]
+name = "omen-gui"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+description = "Wayland dashboard for the omend daemon"
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+omen-common = { path = "../omen-common" }
+omen-audio = { path = "../omen-audio" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+slint = { workspace = true }
+tokio = { workspace = true }
+
+[build-dependencies]
+slint-build = "1"

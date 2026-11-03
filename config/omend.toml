@@ -1,0 +1,126 @@
+# omend daemon config. Copy to /etc/omend/config.toml for the root service.
+# Temperatures are °C. PWM is 0–255. This machine has one PWM shared by both fans.
+profile = "balanced"
+
+[thermal]
+preset = "balanced"
+watchdog_secs = 15
+hysteresis_secs = 4
+poll_ms = 1000
+# Experimental, physically unvalidated recovery on shutdown/sensor/write errors.
+# false requests firmware Auto; true requests hp-wmi maximum mode (mode 0).
+# Maximum may remain active after exit. See docs/daemon-safety.md before testing.
+experimental_emergency_max = false
+# A saved curve name, or quiet / balanced / max / auto.
+# Empty keeps the fan mode you picked until the cable changes.
+plugged_in = ""
+on_battery = ""
+
+[[thermal.curve]]
+temp = 40
+pwm = 70
+
+[[thermal.curve]]
+temp = 55
+pwm = 110
+
+[[thermal.curve]]
+temp = 70
+pwm = 170
+
+[[thermal.curve]]
+temp = 80
+pwm = 220
+
+[[thermal.curve]]
+temp = 90
+pwm = 255
+
+[[thermal.quiet]]
+temp = 45
+pwm = 45
+
+[[thermal.quiet]]
+temp = 60
+pwm = 80
+
+[[thermal.quiet]]
+temp = 75
+pwm = 130
+
+[[thermal.quiet]]
+temp = 85
+pwm = 190
+
+[[thermal.quiet]]
+temp = 95
+pwm = 255
+
+[[thermal.balanced]]
+temp = 40
+pwm = 70
+
+[[thermal.balanced]]
+temp = 55
+pwm = 110
+
+[[thermal.balanced]]
+temp = 70
+pwm = 170
+
+[[thermal.balanced]]
+temp = 80
+pwm = 220
+
+[[thermal.balanced]]
+temp = 90
+pwm = 255
+
+[rgb]
+effect = "static"
+brightness = 160
+speed = 5
+depth = 80
+saturation = 100
+reverse = false
+custom_motion = "cycle"
+
+[[rgb.custom_steps]]
+r = 255
+g = 40
+b = 20
+
+[[rgb.custom_steps]]
+r = 255
+g = 159
+b = 26
+
+[[rgb.custom_steps]]
+r = 48
+g = 209
+b = 88
+
+[[rgb.custom_steps]]
+r = 10
+g = 132
+b = 255
+
+[rgb.zones.wasd]
+r = 255
+g = 40
+b = 20
+
+[rgb.zones.left]
+r = 255
+g = 40
+b = 20
+
+[rgb.zones.center]
+r = 180
+g = 20
+b = 40
+
+[rgb.zones.right]
+r = 255
+g = 80
+b = 20

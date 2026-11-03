@@ -1,0 +1,17 @@
+SPDX-FileCopyrightText: 2026 alanfrancis442
+SPDX-License-Identifier: MIT OR Apache-2.0
+
+omend is dual-licensed. Which text applies depends on the file.
+
+Userspace — the Rust workspace (omend, omen-cli, omen-gui, omen-audio, and omen-common),
+the GUI, the packaging files, and the docs — is available under either of
+these licenses, at your option:
+
+- MIT, in LICENSES/MIT.txt
+- Apache-2.0, in LICENSES/Apache-2.0.txt
+
+The kernel module in kernel/omen-kbd is GPL-2.0-only. The full text is
+LICENSES/GPL-2.0-only.txt. It is a Linux kernel module and calls GPL-only
+kernel interfaces, so that license stays GPL-2.0-only.
+
+Copyright 2026 alanfrancis442

@@ -1,0 +1,7 @@
+// Drop into ~/.config/waybar/config.jsonc under "modules-right" as "custom/omen".
+"custom/omen": {
+  "exec": "omen-cli waybar",
+  "return-type": "json",
+  "interval": 2,
+  "tooltip": true
+}

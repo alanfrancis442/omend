@@ -1,0 +1,16 @@
+[package]
+name = "omen-common"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+description = "Shared types, fan curves, and D-Bus contract for omend"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+libc.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+toml = { workspace = true }
+zbus = { workspace = true }

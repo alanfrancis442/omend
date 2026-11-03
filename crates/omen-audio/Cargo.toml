@@ -1,0 +1,17 @@
+[package]
+name = "omen-audio"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+description = "User-session speaker capture and spectrum service for omend"
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+anyhow = { workspace = true }
+omen-common = { path = "../omen-common" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["process"] }
+zbus = { workspace = true }

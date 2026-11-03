@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
+  <!-- Original abstract fan icon; not an HP trademark. -->
+  <rect width="128" height="128" rx="28" fill="#182334"/>
+  <g fill="#62d6c6">
+    <path d="M64 56C42 43 41 17 62 18c24 1 27 22 10 39z"/>
+    <path d="M72 64c13-22 39-23 38-2-1 24-22 27-39 10z"/>
+    <path d="M64 72c22 13 23 39 2 38-24-1-27-22-10-39z"/>
+    <path d="M56 64C43 86 17 87 18 66c1-24 22-27 39-10z"/>
+  </g>
+  <circle cx="64" cy="64" r="15" fill="#182334" stroke="#d9fff9" stroke-width="5"/>
+</svg>

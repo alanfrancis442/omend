@@ -1,0 +1,14 @@
+[Unit]
+Description=omend speaker spectrum service
+After=pipewire-pulse.service pulseaudio.service
+
+[Service]
+Type=dbus
+BusName=dev.omend.Audio
+ExecStart="%h/.local/bin/omen-audio"
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target
