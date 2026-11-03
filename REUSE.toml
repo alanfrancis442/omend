@@ -4,6 +4,7 @@ version = 1
 path = [
     ".github/**",
     "AGENTS.md",
+    "CLAUDE.md",
     "README.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
