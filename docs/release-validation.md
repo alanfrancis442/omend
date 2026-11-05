@@ -46,8 +46,8 @@ sudo apt-get install -y build-essential pkg-config cmake clang \
 
 These are development/validation dependencies, not a complete binary runtime
 package manifest. Installing them changes the system; CI does so inside its job
-environment. The configured workflow has not yet produced retained hosted-run
-evidence in this checkout. Use `rustup show active-toolchain` to confirm the
+environment. Hosted runs passed on 2026-11-04 (see the release checklist);
+logs are retained by GitHub for 90 days. Use `rustup show active-toolchain` to confirm the
 repository pin before running Cargo. The native bundle builder explicitly uses
 the Rust host target and reads binaries from `target/<host>/release`; ordinary
 Cargo source-build examples use `target/release` when no target override is set.

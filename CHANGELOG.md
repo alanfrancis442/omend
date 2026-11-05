@@ -18,6 +18,8 @@ No supported public binary release has been published by this checkout.
 - Pinned Rust build toolchain, configured Linux CI/candidate workflows, staged
   installer checks and explicit source/license gates for official candidates.
 - Public contribution, security, privacy and hardware-support documentation.
+- Updated `pulldown-cmark` (transitive, via Slint) to 0.13.6 for RUSTSEC-2026-0414
+  and RUSTSEC-2026-0433; hosted CI and security checks pass on Ubuntu 24.04.
 
 ### Known issues
 

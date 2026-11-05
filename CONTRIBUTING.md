@@ -24,6 +24,14 @@ hardware/error paths. They verify requests and state transitions, not cooling.
 
 ## Changes and review
 
+Open a pull request against `main`; direct pushes and force-pushes are
+restricted. The required checks are `linux` (build, tests, fmt, clippy),
+`compile` (optional keyboard module), `dependencies` (cargo-audit) and
+`secrets` (gitleaks). Workflows from first-time external contributors need
+maintainer approval to run. Changes under `crates/omend/`, `packaging/`,
+`kernel/` or `.github/` get extra scrutiny because the daemon runs as root and
+drives cooling hardware; the code owners are requested automatically.
+
 Explain the problem, resulting behavior, validation, and remaining limitations.
 Add regression tests for safety or authorization changes. Keep generated archives
 under ignored `dist/` and build output under ignored `target/`. Never commit

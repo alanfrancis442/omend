@@ -1,0 +1,7 @@
+# Changes to privileged, packaging, kernel and CI code need owner review.
+/crates/omend/       @alanfrancis442
+/crates/omen-common/ @alanfrancis442
+/packaging/          @alanfrancis442
+/kernel/             @alanfrancis442
+/.github/            @alanfrancis442
+/docs/hardware-validation.md @alanfrancis442

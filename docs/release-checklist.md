@@ -30,7 +30,7 @@ hardware tests stay pending and will create release accounts later.
   dependencies documented. This does not establish the oldest possible MSRV.
 - [x] CI, security scans, compile-only optional-module checks and manually
   dispatched candidate workflows configured. Actions/scanner versions are
-  pinned; actual hosted execution remains open.
+  pinned. Hosted execution is recorded below.
 - [x] Native builder uses an explicit target, locked release build, full revision,
   provenance, file/archive checksums, normalized archive metadata and unique
   dirty-candidate names. Full binary reproducibility remains unproven. Official
@@ -73,6 +73,20 @@ hardware tests stay pending and will create release accounts later.
 - [x] Optional kernel-module compile coverage and failed-probe cleanup/color-read
   robustness reviewed. Module remains excluded from the userspace binary bundle;
   build evidence and limitations are in [Kernel module](kernel-module.md).
+
+## Hosted CI evidence
+
+On 2026-11-04 all four push workflows passed on GitHub for commit `85f3988`
+(`main`): `CI / linux`, `Optional keyboard module compile / compile`,
+`Security checks / dependencies` and `Security checks / secrets`. The first
+`dependencies` run failed on RUSTSEC-2026-0414 and RUSTSEC-2026-0433
+(`pulldown-cmark` 0.13.4, a transitive Slint dependency); `Cargo.lock` was
+updated to 0.13.6 and the run then passed. Eight unmaintained/unsound/yanked
+warnings (`bincode`, `ttf-parser`, `zbus_names`, `zvariant`, `zvariant_derive`,
+`tokio` RUSTSEC-2026-0386, `async-executor`, `clipboard-win`) remain visible and
+are not failures. This is Ubuntu 24.04 compile/test evidence only; it is not
+package, runtime or hardware validation. The `main` ruleset, private
+vulnerability reporting and Dependabot alerts are enabled on the repository.
 
 ## Current host and artifact state
 
